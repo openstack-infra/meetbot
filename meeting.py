@@ -168,7 +168,7 @@ class MeetingCommands(object):
         """Add informational item to the minutes."""
         m = Idea(**kwargs)
         self.minutes.append(m)
-    def do_halp(self, *kwargs):
+    def do_halp(self, **kwargs):
         """Add call for halp to the minutes."""
         m = Halp(**kwargs)
         self.minutes.append(m)
@@ -349,8 +349,8 @@ class Meeting(MeetingCommands, object):
                     headerPrinted = True
                 print >> f, "<li>%s</li>\n"%html(m.line)
                 m.assigned = True
-                if headerPrinted:
-                    print >> f, "</ol>\n</li>\n"
+            if headerPrinted:
+                print >> f, "</ol>\n</li>\n"
         # unassigned items:
         print >> f, "<li><b>UNASSIGNED</b>\n<ol>\n"
         for m in self.minutes:
