@@ -115,14 +115,17 @@ class MeetingCommands(object):
         """Add a chair to the meeting."""
         if not self.isChair(nick): return
         for chair in line.strip().split():
-            self.addnick(chair, lines=0)
-            self.chairs.setdefault(chair.strip(), True)
-            self.reply("Chair added: %s"%chair)
+            chair = html(chair.strip())
+            if not self.chairs.has_key(chair):
+                self.addnick(chair, lines=0)
+                self.chairs.setdefault(chair, True)
+                self.reply("Chair added: %s"%chair)
     def do_unchair(self, nick, line, **kwargs):
         """Remove a chair to the meeting (founder can not be removed)."""
         if not self.isChair(nick): return
         for chair in line.strip().split():
-            if self.chairs.has_key(chair.strip()):
+            chair = html(chair.strip())
+            if self.chairs.has_key(chair):
                 del self.chairs[chair]
                 self.reply("Chair removed: %s"%chair)
     def do_undo(self, nick, **kwargs):
@@ -175,7 +178,7 @@ class MeetingCommands(object):
         To see where this can be used, see #action command"""
         nicks = line.strip().split()
         for nick in nicks:
-            self.addnick(nick, lines=0)
+            self.addnick(html(nick), lines=0)
     def do_link(self, **kwargs):
         """Add informational item to the minutes."""
         m = Link(**kwargs)
@@ -200,7 +203,7 @@ class Meeting(MeetingCommands, object):
         self.lines = [ ]
         self.minutes = [ ]
         self.attendees = { }
-        self.chairs = {owner:True}
+        self.chairs = { }
         self._writeRawLog = writeRawLog
         if filename is not None:
             self.filename = filename
@@ -234,6 +237,7 @@ class Meeting(MeetingCommands, object):
     def addline(self, nick, line, time_=None):
         """This is the way to add lines to the Meeting object.
         """
+        nick = html(nick)
         self.addnick(nick)
         line = line.strip(' \x01') # \x01 is present in ACTIONs
         # Setting a custom time is useful when replying logs,
@@ -328,7 +332,7 @@ class Meeting(MeetingCommands, object):
         for m in self.minutes:
             # The hack below is needed because of pickling problems
             if not isinstance(m, (Action, meeting.Action)): continue
-            print >> f, "  <li>%s</li>"%html(m.line)
+            print >> f, "  <li>%s</li>"%m.line #already escaped
         print >> f, "</ol>\n\n<br>"
         
 
@@ -343,7 +347,7 @@ class Meeting(MeetingCommands, object):
                 if not headerPrinted:
                     print >> f, "  <li> %s <ol>"%nick
                     headerPrinted = True
-                print >> f, "    <li>%s</li>"%html(m.line)
+                print >> f, "    <li>%s</li>"%m.line # already escaped
                 m.assigned = True
             if headerPrinted:
                 print >> f, "  </ol></li>"
@@ -353,7 +357,7 @@ class Meeting(MeetingCommands, object):
         for m in self.minutes:
             if not isinstance(m, (Action, meeting.Action)): continue
             if getattr(m, 'assigned', False): continue
-            print >> f, "    <li>%s</li>"%html(m.line)
+            print >> f, "    <li>%s</li>"%m.line # already escaped
             numberUnassigned += 1
         if numberUnassigned == 0: print >> f, "    <li>(none)</li>"
         print >> f, '  </ol>\n</li>'
@@ -441,15 +445,19 @@ class Link:
     itemtype = 'LINK'
     def __init__(self, nick, line, linenum, time_):
         self.nick = nick ; self.linenum = linenum
-        self.url, self.line = (line+' ').split(' ', 1)
-        self.line = self.line.strip()
         self.time = time.strftime("%H:%M:%S", time_)
+        self.url, self.line = (line+' ').split(' ', 1)
+        # URL-sanitization
+        self.url_readable = html(self.url) # readable line version
+        self.url = self.url.replace('"', "%22")
+        # readable line satitization:
+        self.line = html(self.line.strip())
     def html(self, M):
         self.link = os.path.basename(M.logFilename())
         self.anchor = 'l-'+str(self.linenum)
         self.__dict__['itemtype'] = self.itemtype
         return """<tr><td><a href='%(link)s#%(anchor)s'>%(time)s</a></td>
-        <td>%(itemtype)s</td><td>%(nick)s</td><td><a href="%(url)s">%(url)s</a> %(line)s</td>
+        <td>%(itemtype)s</td><td>%(nick)s</td><td><a href="%(url)s">%(url_readable)s</a> %(line)s</td>
         </tr>"""%self.__dict__
 
 
