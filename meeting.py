@@ -334,7 +334,7 @@ class Meeting(MeetingCommands, object):
 
         # Action Items, by person (This could be made lots more efficient)
         print >> f, "<b>Action Items, by person</b><br>\n<ol>"
-        for nick in sorted(self.attendees.keys()):
+        for nick in sorted(self.attendees.keys(), key=lambda x: x.lower()):
             headerPrinted = False
             for m in self.minutes:
                 # The hack below is needed because of pickling problems
