@@ -65,8 +65,8 @@ class MeatBot(callbacks.Plugin):
         # interactive interperter inside of the live bot.  use
         # code.interact instead of my souped-up version if you aren't
         # on my computer:
-        if payload == 'interact':
-            from rkddp.interact import interact ; interact()
+        #if payload == 'interact':
+        #    from rkddp.interact import interact ; interact()
 
         # Get our Meeting object, if one exists.  Have to keep track
         # of different servers/channels.
