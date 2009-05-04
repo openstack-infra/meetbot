@@ -1,4 +1,34 @@
-import cPickle
+# Richard Darst, May 2009
+
+###
+# Copyright (c) 2009, Richard Darst
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+#   * Redistributions of source code must retain the above copyright notice,
+#     this list of conditions, and the following disclaimer.
+#   * Redistributions in binary form must reproduce the above copyright notice,
+#     this list of conditions, and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#   * Neither the name of the author of this software nor the name of
+#     contributors to this software may be used to endorse or promote products
+#     derived from this software without specific prior written consent.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+###
+
 import time
 import os
 import re
@@ -9,16 +39,23 @@ import pygments
 #
 # Throw any overrides into meetingLocalConfig.py in this directory:
 #
+# Where to store files on disk
 logFileDir = '/home/richard/meatbot/'
+# The links to the logfiles are given this prefix
 logUrlPrefix = 'http://rkd.zgib.net/meatbot/'
+# Where to say to go for more information about MeatBot
 MeetBotInfoURL = 'http://wiki.debian.org/MeatBot'
-RestrictPerm = stat.S_IRWXO|stat.S_IRWXG  # g,o perm zeroed with #restrict
-#RestrictPerm = stat.S_IRWXU|stat.S_IRWXO|stat.S_IRWXG  # u,g,o perm zeroed.
+# This is used with the #restrict command to remove permissions from files.
+RestrictPerm = stat.S_IRWXO|stat.S_IRWXG  # g,o perm zeroed
+# RestrictPerm = stat.S_IRWXU|stat.S_IRWXO|stat.S_IRWXG  # u,g,o perm zeroed.
 # used to detect #link :
 UrlProtocols = ('http:', 'https:', 'irc:', 'ftp:', 'mailto:', 'ssh:')
 # regular expression for parsing commands
 command_RE = re.compile('#([\w]+)(?:[ \t]*(.*))?')
+# This is the help printed when a meeting starts
 usefulCommands = "#action #agreed #halp #info #idea #link #topic"
+# The channels which won't have date/time appended to the filename.
+testChannels = ("#meatbot-test", )
 
 # load custom local configurations
 try:
@@ -159,7 +196,8 @@ class MeetingCommands(object):
 class Meeting(MeetingCommands, object):
     _lurk = False
     _restrictlogs = False
-    def __init__(self, channel, owner, testing=False, oldtopic=None):
+    def __init__(self, channel, owner, oldtopic=None,
+                 filename=None, writeRawLog=True):
         self.owner = owner
         self.channel = channel
         self.oldtopic = oldtopic
@@ -167,7 +205,10 @@ class Meeting(MeetingCommands, object):
         self.minutes = [ ]
         self.attendees = { }
         self.chairs = {owner:True}
-        if testing or channel == "#meatbot-test":
+        self._writeRawLog = writeRawLog
+        if filename is not None:
+            self.filename = filename
+        elif channel in testChannels:
             self.filename = channel.strip('# ')
         else:
             self.filename = channel.strip('# ') + \
@@ -231,10 +272,12 @@ class Meeting(MeetingCommands, object):
         
     def save(self):
         """Write all output files."""
-        self.writePickle()
+        if self._writeRawLog:
+            self.writeRawLog()
         self.writeLogs()
         self.writeMinutes()
     def writeLogs(self):
+        """Write pretty HTML logs."""
         # pygments lexing setup:
         # (pygments HTML-formatter handles HTML-escaping)
         from pygments.lexers import IrcLogsLexer
@@ -248,18 +291,15 @@ class Meeting(MeetingCommands, object):
         # We might want to restrict read-permissions of the files from
         # the webserver.
         if self._restrictlogs:
-            f.flush()
-            newmode = os.stat(f.name).st_mode & (~RestrictPerm)
-            os.chmod(f.name, newmode)
+            self.restrictPermissions(f)
         f.write(out)
     def writeMinutes(self):
+        """Write the minutes summary."""
         f = file(self.minutesFilename(), 'w')
         # We might want to restrict read-permissions of the files from
         # the webserver.
         if self._restrictlogs:
-            f.flush()
-            newmode = os.stat(f.name).st_mode & (~RestrictPerm)
-            os.chmod(f.name, newmode)
+            self.restrictPermissions(f)
 
 
         # Header and things stored
@@ -332,20 +372,17 @@ class Meeting(MeetingCommands, object):
         print >> f, "</ol><br><br>\n\n"
         print >> f, """Generated by <a href="%s">MeatBot</a>."""%MeetBotInfoURL
         print >> f, "</body></html>"
-    def writePickle(self):
-        """Write a pickled representation of this meeting (debugging)."""
-        f = file(os.path.join(logFileDir, self.filename+'.pickle'), 'w')
+    def writeRawLog(self):
+        """Write raw text logs."""
+        f = file(self.logFilename(raw=True), 'w')
         if self._restrictlogs:
-            f.flush()
-            newmode = os.stat(f.name).st_mode & (~RestrictPerm)
-            os.chmod(f.name, newmode)
-        savedict = self.__dict__.copy()
-        if savedict.has_key('_sendReply'): del savedict['_sendReply']
-        if savedict.has_key('_setTopic'): del savedict['_setTopic']
-        cPickle.dump(savedict, f, cPickle.HIGHEST_PROTOCOL)
-    def logFilename(self, url=False):
+            self.restrictPermissions(f)
+        f.write("\n".join(self.lines))
+    def logFilename(self, url=False, raw=False):
+        extension = '.log.html'
+        if raw: extension = '.log.txt'
         """Name of the meeting logfile"""
-        filename = self.filename +'.log.html'
+        filename = self.filename + extension
         if url:
             return os.path.join(logUrlPrefix, filename)
         return os.path.join(logFileDir, filename)
@@ -355,7 +392,12 @@ class Meeting(MeetingCommands, object):
         if url:
             return os.path.join(logUrlPrefix, filename)
         return os.path.join(logFileDir, filename)
-
+    def restrictPermissions(self, f):
+        """Remove the permissions given in the variable RestrictPerm."""
+        f.flush()
+        newmode = os.stat(f.name).st_mode & (~RestrictPerm)
+        os.chmod(f.name, newmode)
+        
 
 
 #
@@ -422,8 +464,19 @@ def parse_time(time_):
 if __name__ == '__main__':
     import sys
     if sys.argv[1] == 'replay':
+        dir, fname = os.path.split(sys.argv[2])
+        logFileDir = dir  # OVERWRITING global variable!
+        m = re.match('(.*)\.log\.txt', fname)
+        if m:
+            filename = m.group(1)
+        else:
+            filename = os.path.splitext(fname)[0]
+        print 'Saving to:', filename
         channel = os.path.basename(sys.argv[2]).split('.')[0]
-        M = Meeting(channel=channel, owner=None, testing=True)
+
+
+        M = Meeting(channel=channel, owner=None,
+                    filename=filename, writeRawLog=False)
         for line in file(sys.argv[2]):
             # match regular spoken lines:
             r = re.compile(r'\[?([0-9: ]+)\]? <([ \w]+)> (.*)')
@@ -445,13 +498,4 @@ if __name__ == '__main__':
                 M.addline(nick, "ACTION "+line, time_=time_)
         M.save()
 
-    # Load a pickled meeting file and replay it.
-    # python meeting.py load <blah>.pickle
-    elif sys.argv[1] == 'load':
-        fname = sys.argv[2]
-
-        M = Meeting.__new__(Meeting)
-        M.__dict__ = cPickle.load(file(fname))
-        #M.save()
-        from rkddp.interact import interact ; interact()
 
