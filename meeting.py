@@ -63,13 +63,9 @@ try:
 except ImportError:
     pass
 
-
-allowedChars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%\'()*+,-./:;=?@[\\]^_`{|}~ \t\n\r\x0b\x0c<>&'
-htmlEscape = {">":"&gt;"  , "<":"&lt;"  , "&":"&amp;", 
-               '"':"&quot;", "'":"&apos;", }
 def html(text):
-    L = [ htmlEscape.get(c, c) for c in text if c in allowedChars]
-    return "".join(L)
+    """Escape bad sequences (in HTML) in user-generated lines."""
+    return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
 class MeetingCommands(object):
