@@ -43,6 +43,11 @@ import pygments
 logFileDir = '/home/richard/meatbot/'
 # The links to the logfiles are given this prefix
 logUrlPrefix = 'http://rkd.zgib.net/meatbot/'
+# Give the pattern to save files into here.  Use %(channel)s for
+# channel.  This will be sent through strftime for substituting it
+# times, howover, for strftime codes you must use doubled percent
+# signs (%%).  This will be joined with the directories above.
+filenamePattern = '%(channel)s/%%Y/%(channel)s.%%F-%%H.%%M'
 # Where to say to go for more information about MeatBot
 MeetBotInfoURL = 'http://wiki.debian.org/MeatBot'
 # This is used with the #restrict command to remove permissions from files.
@@ -55,7 +60,8 @@ command_RE = re.compile('#([\w]+)(?:[ \t]*(.*))?')
 # This is the help printed when a meeting starts
 usefulCommands = "#action #agreed #halp #info #idea #link #topic"
 # The channels which won't have date/time appended to the filename.
-testChannels = ("#meatbot-test", )
+specialChannels = ("#meatbot-test", "#meatbot-test2")
+specialChannelFilenamePattern = '%(channel)s/%(channel)s'
 
 # load custom local configurations
 try:
@@ -205,13 +211,8 @@ class Meeting(MeetingCommands, object):
         self.attendees = { }
         self.chairs = { }
         self._writeRawLog = writeRawLog
-        if filename is not None:
-            self.filename = filename
-        elif channel in testChannels:
-            self.filename = channel.strip('# ')
-        else:
-            self.filename = channel.strip('# ') + \
-                            time.strftime('-%Y-%m-%d-%H.%M', time.gmtime())
+        if filename:
+            self._filename = filename
 
     # These commands are callbacks to manipulate the IRC protocol.
     # set self._sendReply and self._setTopic to an callback to do these things.
@@ -381,20 +382,43 @@ class Meeting(MeetingCommands, object):
         if self._restrictlogs:
             self.restrictPermissions(f)
         f.write("\n".join(self.lines))
-    def logFilename(self, url=False, raw=False):
-        extension = '.log.html'
-        if raw: extension = '.log.txt'
-        """Name of the meeting logfile"""
-        filename = self.filename + extension
+    def filename(self, url=False):
+        # provide a way to override the filename.  If it is
+        # overridden, it must be a full path (and the URL-part may not
+        # work.):
+        if getattr(self, '_filename', None):
+            return self._filename
+        # names useful for pathname formatting.
+        # Certain test channels always get the same name - don't need
+        # file prolifiration for them
+        if self.channel in specialChannels:
+            # mask global!!
+            pattern = specialChannelFilenamePattern
+        else:
+            pattern = filenamePattern
+        channel = self.channel.strip('# ')
+        path = pattern%locals()
+        path = time.strftime(path, self.starttime)
+        # If we want the URL name, append URL prefix and return
         if url:
-            return os.path.join(logUrlPrefix, filename)
-        return os.path.join(logFileDir, filename)
+            return os.path.join(logUrlPrefix, path)
+        path = os.path.join(logFileDir, path)
+        return path
+    def logFilename(self, url=False, raw=False):
+        """Name of the meeting logfile"""
+        extension = '.log.html'
+        if raw:
+            extension = '.log.txt'
+        fname = self.filename(url=url)+extension
+        if not url and not os.access(os.path.dirname(fname), os.F_OK):
+            os.makedirs(os.path.dirname(fname))
+        return fname
     def minutesFilename(self, url=False):
         """Name of the meeting minutes file"""
-        filename = self.filename +'.html'
-        if url:
-            return os.path.join(logUrlPrefix, filename)
-        return os.path.join(logFileDir, filename)
+        fname = self.filename(url=url)+'.html'
+        if not url and not os.access(os.path.dirname(fname), os.F_OK):
+            os.makedirs(os.path.dirname(fname))
+        return fname
     def restrictPermissions(self, f):
         """Remove the permissions given in the variable RestrictPerm."""
         f.flush()
@@ -471,8 +495,7 @@ def parse_time(time_):
 if __name__ == '__main__':
     import sys
     if sys.argv[1] == 'replay':
-        dir, fname = os.path.split(sys.argv[2])
-        logFileDir = dir  # OVERWRITING global variable!
+        fname = sys.argv[2]
         m = re.match('(.*)\.log\.txt', fname)
         if m:
             filename = m.group(1)
@@ -480,7 +503,6 @@ if __name__ == '__main__':
             filename = os.path.splitext(fname)[0]
         print 'Saving to:', filename
         channel = os.path.basename(sys.argv[2]).split('.')[0]
-
 
         M = Meeting(channel=channel, owner=None,
                     filename=filename, writeRawLog=False)
