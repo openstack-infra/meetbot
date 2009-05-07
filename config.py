@@ -37,12 +37,12 @@ def configure(advanced):
     # user or not.  You should effect your configuration by manipulating the
     # registry as appropriate.
     from supybot.questions import expect, anything, something, yn
-    conf.registerPlugin('MeatBot', True)
+    conf.registerPlugin('MeetBot', True)
 
 
-MeatBot = conf.registerPlugin('MeatBot')
+MeetBot = conf.registerPlugin('MeetBot')
 # This is where your configuration variables (if any) should go.  For example:
-# conf.registerGlobalValue(MeatBot, 'someConfigVariableName',
+# conf.registerGlobalValue(MeetBot, 'someConfigVariableName',
 #     registry.Boolean(False, """Help for someConfigVariableName."""))
 
 

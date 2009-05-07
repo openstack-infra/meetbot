@@ -39,12 +39,12 @@ import time
 import meeting
 meeting = reload(meeting)
 
-class MeatBot(callbacks.Plugin):
-    """Add the help for "@plugin help MeatBot" here
+class MeetBot(callbacks.Plugin):
+    """Add the help for "@plugin help MeetBot" here
     This should describe *how* to use this plugin."""
 
     def __init__(self, irc):
-        self.__parent = super(MeatBot, self)
+        self.__parent = super(MeetBot, self)
         self.__parent.__init__(irc)
                         
         self.Meetings = { }
@@ -117,7 +117,7 @@ class MeatBot(callbacks.Plugin):
     savemeetings = wrap(savemeetings, ['owner'])
 
 
-Class = MeatBot
+Class = MeetBot
 
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

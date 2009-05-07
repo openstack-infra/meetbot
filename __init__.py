@@ -48,7 +48,7 @@ __author__ = supybot.Author('Richard Darst', 'MrBeige', 'rkd@zgib.net')
 __contributors__ = {}
 
 # This is a url where the most recent plugin package can be downloaded.
-__url__ = '' # 'http://supybot.com/Members/yourname/MeatBot/download'
+__url__ = '' # 'http://supybot.com/Members/yourname/MeetBot/download'
 
 import config
 import plugin
