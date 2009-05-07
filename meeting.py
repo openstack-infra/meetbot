@@ -82,13 +82,15 @@ class MeetingCommands(object):
     #  linenum= <the line number, 1-based index (for logfile)>
     #  time_=   <time it was said>
     # Commands for Chairs:
-    def do_startmeeting(self, nick, time_, **kwargs):
+    def do_startmeeting(self, nick, time_, line, **kwargs):
         """Begin a meeting."""
         self.reply("Meeting started %s UTC.  The chair is %s."%\
                    (time.asctime(time_), self.owner))
         self.reply(("Information about MeetBot at %s , Useful Commands: %s.")%\
                    (MeetBotInfoURL, usefulCommands))
         self.starttime = time_
+        if line.strip():
+            self.do_meetingtopic(nick=nick, line=line, time_=time_, **kwargs)
     def do_endmeeting(self, nick, time_, **kwargs):
         """End the meeting."""
         if not self.isChair(nick): return
@@ -105,7 +107,20 @@ class MeetingCommands(object):
         if not self.isChair(nick): return
         m = Topic(nick=nick, line=line, **kwargs)
         self.minutes.append(m)
-        self.topic(line)
+        if self._meetingTopic:
+            topic = '%s (Meeting topic: %s)'%(line, self._meetingTopic)
+        else:
+            topic = line
+        self.topic(topic)
+    def do_meetingtopic(self, nick, line, **kwargs):
+        """Set a meeting topic (included in all sub-topics)"""
+        if not self.isChair(nick): return
+        line = line.strip()
+        if line == '' or line.lower() == 'none' or line.lower() == 'unset':
+            self._meetingTopic = None
+        else:
+            self._meetingTopic = line
+            self.reply("The meeting topic is now: %s"%line)
     def do_save(self, nick, time_, **kwargs):
         """Add a chair to the meeting."""
         if not self.isChair(nick): return
@@ -211,6 +226,7 @@ class Meeting(MeetingCommands, object):
         self.attendees = { }
         self.chairs = { }
         self._writeRawLog = writeRawLog
+        self._meetingTopic = None
         if filename:
             self._filename = filename
 
@@ -302,18 +318,22 @@ class Meeting(MeetingCommands, object):
         if self._restrictlogs:
             self.restrictPermissions(f)
 
-
+        if self._meetingTopic:
+            pageTitle = "%s: %s"%(self.channel, self._meetingTopic)
+        else:
+            pageTitle = "%s Meeting"%self.channel
         # Header and things stored
         print >> f, \
         '''<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
         <html>
         <head>
         <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
-        <title>%s Meeting Minutes</title>
+        <title>%s</title>
         </head>
         <body>
+        <h1>%s</h1>
         Meeting started by %s at %s UTC.  (<a href="%s">full logs</a>)<br>
-        \n\n<table border=1>'''%(self.channel, self.owner,
+        \n\n<table border=1>'''%(pageTitle, pageTitle, self.owner,
                              time.strftime("%H:%M:%S", self.starttime),
                              os.path.basename(self.logFilename()))
         # Add all minute items to the table
