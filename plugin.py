@@ -98,6 +98,25 @@ class MeatBot(callbacks.Plugin):
             #M.save()  # now do_endmeeting in M calls the save functions
             del self.Meetings[Mkey]
 
+    def listmeetings(self, irc, msg, args):
+        """List all currently-active meetings."""
+        reply = ""
+        reply = ", ".join(str(x) for x in sorted(self.Meetings.keys()) )
+        if reply.strip() == '':
+            irc.reply("No currently active meetings.")
+        else:
+            irc.reply(reply)
+    listmeetings = wrap(listmeetings, ['private', 'owner'])
+
+    def savemeetings(self, irc, msg, args):
+        """Save all currently active meetings."""
+        numSaved = 0
+        for M in self.Meetings:
+            M.save()
+        irc.reply("Saved %d meetings."%numSaved)
+    savemeetings = wrap(savemeetings, ['owner'])
+
+
 Class = MeatBot
 
 
