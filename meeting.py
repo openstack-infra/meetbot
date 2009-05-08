@@ -65,6 +65,8 @@ specialChannelFilenamePattern = '%(channel)s/%(channel)s'
 
 # load custom local configurations
 try:
+    import meetingLocalConfig
+    meetingLocalConfig = reload(meetingLocalConfig)
     from meetingLocalConfig import *
 except ImportError:
     pass
