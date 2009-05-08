@@ -522,7 +522,7 @@ if __name__ == '__main__':
         else:
             filename = os.path.splitext(fname)[0]
         print 'Saving to:', filename
-        channel = os.path.basename(sys.argv[2]).split('.')[0]
+        channel = '#'+os.path.basename(sys.argv[2]).split('.')[0]
 
         M = Meeting(channel=channel, owner=None,
                     filename=filename, writeRawLog=False)
@@ -545,6 +545,6 @@ if __name__ == '__main__':
                 nick = m.group(2).strip()
                 line = m.group(3).strip()
                 M.addline(nick, "ACTION "+line, time_=time_)
-        M.save()
+        #M.save() # should be done by #endmeeting in the logs!
 
 
