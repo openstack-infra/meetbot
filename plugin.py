@@ -116,6 +116,42 @@ class MeetBot(callbacks.Plugin):
         irc.reply("Saved %d meetings."%numSaved)
     savemeetings = wrap(savemeetings, ['owner'])
 
+    def pingall(self, irc, msg, args, message):
+        """Send a broadcast ping to all users on the channel.
+
+        An message to be sent along with this ping must also be
+        supplied for this command to work.
+        """
+        nick = msg.nick
+        channel = msg.args[0]
+        payload = msg.args[1]
+
+        # We require a message to go out with the ping, we don't want
+        # to waste people's time:
+        if channel[0] != '#':
+            irc.reply("Not joined to any channel.")
+            return
+        if message is None:
+            irc.reply("You must supply a description with the `pingall` command.  We don't want to go wasting people's times looking for why they are pinged.")
+            return
+
+        # Send announcement message
+        irc.sendMsg(ircmsgs.privmsg(channel, message))
+        # ping all nicks in lines of about 256
+        nickline = ''
+        nicks = sorted(irc.state.channels[channel].users,
+                       key=lambda x: x.lower())
+        for nick in nicks:
+            nickline = nickline + nick + ' '
+            if len(nickline) > 256:
+                irc.sendMsg(ircmsgs.privmsg(channel, nickline))
+                nickline = ''
+        irc.sendMsg(ircmsgs.privmsg(channel, nickline))
+        # Send announcement message
+        irc.sendMsg(ircmsgs.privmsg(channel, message))
+
+    pingall = wrap(pingall, [optional('text', None)])
+
 
 Class = MeetBot
 
