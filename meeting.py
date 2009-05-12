@@ -317,12 +317,12 @@ class Meeting(MeetingCommands, object):
                                   full=True, style=pygmentizeStyle)
         Lexer = IrcLogsLexer
         Lexer.tokens['msg'][1:1] = \
-           [ #match:   #command\n
-            (r"(\#[^\s]+\s*\n)",
-             bygroups(token.Generic.Heading), '#pop'),
-            # match:   #command <line of the command>
-            (r"(\#[^\s]+\s)(.*\n)",
-             bygroups(token.Generic.Heading, token.Generic.Strong), '#pop')
+           [ # match:   #topic commands
+            (r"(\#topic[ \t\f\v]*)(.*\n)",
+             bygroups(token.Keyword, token.Generic.Heading), '#pop'),
+             # match:   #command   (others)
+            (r"(\#[^\s]+[ \t\f\v]*)(.*\n)",
+             bygroups(token.Keyword, token.Generic.Strong), '#pop'),
            ]
         lexer = Lexer(encoding='utf-8')
         #from rkddp.interact import interact ; interact()
