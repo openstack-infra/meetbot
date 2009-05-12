@@ -64,6 +64,10 @@ specialChannels = ("#meetbot-test", "#meetbot-test2")
 specialChannelFilenamePattern = '%(channel)s/%(channel)s'
 # HTML irc log highlighting style.  `pygmentize -L styles` to list.
 pygmentizeStyle = 'friendly'
+# Timezone setting.  You can use friendly names like 'US/Eastern', etc.
+# Check /usr/share/zoneinfo/ .  Or `man timezone`: this is the contents
+# of the TZ environment variable.
+timeZone = 'UTC'
 
 # load custom local configurations
 try:
@@ -77,6 +81,10 @@ def html(text):
     """Escape bad sequences (in HTML) in user-generated lines."""
     return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
+# Set the timezone, using the variable above
+os.environ['TZ'] = timeZone
+time.tzset()
+
 
 class MeetingCommands(object):
     # Command Definitions
@@ -88,8 +96,8 @@ class MeetingCommands(object):
     # Commands for Chairs:
     def do_startmeeting(self, nick, time_, line, **kwargs):
         """Begin a meeting."""
-        self.reply("Meeting started %s UTC.  The chair is %s."%\
-                   (time.asctime(time_), self.owner))
+        self.reply("Meeting started %s %s.  The chair is %s."%\
+                   (time.asctime(time_), timeZone, self.owner))
         self.reply(("Information about MeetBot at %s , Useful Commands: %s.")%\
                    (MeetBotInfoURL, usefulCommands))
         self.starttime = time_
@@ -100,8 +108,8 @@ class MeetingCommands(object):
         if not self.isChair(nick): return
         self.endtime = time_
         self.save()
-        self.reply("Meeting ended %s UTC.  Information about MeetBot at %s ."%\
-                   (time.asctime(time_),MeetBotInfoURL))
+        self.reply("Meeting ended %s %s.  Information about MeetBot at %s ."%\
+                   (time.asctime(time_), timeZone, MeetBotInfoURL))
         self.reply("Minutes: "+self.minutesFilename(url=True))
         self.reply("Log:     "+self.logFilename(url=True))
         if hasattr(self, 'oldtopic'):
@@ -263,7 +271,7 @@ class Meeting(MeetingCommands, object):
         line = line.strip(' \x01') # \x01 is present in ACTIONs
         # Setting a custom time is useful when replying logs,
         # otherwise use our current time:
-        if time_ is None: time_ = time.gmtime()
+        if time_ is None: time_ = time.localtime()
         
         # Handle the logging of the line
         if line[:6] == 'ACTION':
@@ -348,17 +356,18 @@ class Meeting(MeetingCommands, object):
         </head>
         <body>
         <h1>%s</h1>
-        Meeting started by %s at %s UTC.  (<a href="%s">full logs</a>)<br>
+        Meeting started by %s at %s %s.  (<a href="%s">full logs</a>)<br>
         \n\n<table border=1>'''%(pageTitle, pageTitle, self.owner,
                              time.strftime("%H:%M:%S", self.starttime),
+                             timeZone,
                              os.path.basename(self.logFilename()))
         # Add all minute items to the table
         for m in self.minutes:
             print >> f, m.html(self)
         # End the log portion
         print >> f, """</table>
-        Meeting ended at %s UTC.  (<a href="%s">full logs</a>)"""%\
-            (time.strftime("%H:%M:%S", self.endtime),
+        Meeting ended at %s %s.  (<a href="%s">full logs</a>)"""%\
+            (time.strftime("%H:%M:%S", self.endtime), timeZone,
              os.path.basename(self.logFilename()))
         print >> f, "\n<br><br><br>"
 
