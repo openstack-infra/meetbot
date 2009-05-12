@@ -308,20 +308,6 @@ class Meeting(MeetingCommands, object):
         formatter = HtmlFormatter(encoding='utf-8', lineanchors='l',
                                   full=True, style=pygmentizeStyle)
         Lexer = IrcLogsLexer
-        #Lexer.tokens['root'][1:1] = \
-        #   [
-        #    # Hack to handle line-endings.
-        #    ("^" + lexer.timestamp + r"""
-        #    (\s*<.*?>\s*)          # Nick
-        #    (\#\w+\s*)$""",
-        #     bygroups(token.Comment.Preproc, token.Name.Tag, commandToken)),
-        #    ("^" + lexer.timestamp + r"""
-        #    (\s*<.*?>\s*)          # Nick
-        #    (\#\w+\s*)
-        #    (.*)""",
-        #     bygroups(token.Comment.Preproc, token.Name.Tag,
-        #              commandToken, token.Generic.Strong)),
-        #    ]
         Lexer.tokens['msg'][1:1] = \
            [ #match:   #command\n
             (r"(\#[^\s]+\s*\n)",
