@@ -62,6 +62,8 @@ usefulCommands = "#action #agreed #halp #info #idea #link #topic"
 # The channels which won't have date/time appended to the filename.
 specialChannels = ("#meetbot-test", "#meetbot-test2")
 specialChannelFilenamePattern = '%(channel)s/%(channel)s'
+# HTML irc log highlighting style.  `pygmentize -L styles` to list.
+pygmentizeStyle = 'friendly'
 
 # load custom local configurations
 try:
@@ -301,9 +303,35 @@ class Meeting(MeetingCommands, object):
         # (pygments HTML-formatter handles HTML-escaping)
         from pygments.lexers import IrcLogsLexer
         from pygments.formatters import HtmlFormatter
+        import pygments.token as token
+        from pygments.lexer import bygroups
         formatter = HtmlFormatter(encoding='utf-8', lineanchors='l',
-                                  full=True)
-        lexer = IrcLogsLexer(encoding='utf-8')
+                                  full=True, style=pygmentizeStyle)
+        Lexer = IrcLogsLexer
+        #Lexer.tokens['root'][1:1] = \
+        #   [
+        #    # Hack to handle line-endings.
+        #    ("^" + lexer.timestamp + r"""
+        #    (\s*<.*?>\s*)          # Nick
+        #    (\#\w+\s*)$""",
+        #     bygroups(token.Comment.Preproc, token.Name.Tag, commandToken)),
+        #    ("^" + lexer.timestamp + r"""
+        #    (\s*<.*?>\s*)          # Nick
+        #    (\#\w+\s*)
+        #    (.*)""",
+        #     bygroups(token.Comment.Preproc, token.Name.Tag,
+        #              commandToken, token.Generic.Strong)),
+        #    ]
+        Lexer.tokens['msg'][1:1] = \
+           [ #match:   #command\n
+            (r"(\#[^\s]+\s*\n)",
+             bygroups(token.Generic.Heading), '#pop'),
+            # match:   #command <line of the command>
+            (r"(\#[^\s]+\s)(.*\n)",
+             bygroups(token.Generic.Heading, token.Generic.Strong), '#pop')
+           ]
+        lexer = Lexer(encoding='utf-8')
+        #from rkddp.interact import interact ; interact()
         out = pygments.highlight("\n".join(self.lines), lexer, formatter)
         # Do the writing...
         f = file(self.logFilename(), 'w')
