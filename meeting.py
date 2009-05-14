@@ -149,7 +149,7 @@ class MeetingCommands(object):
         if not self.isChair(nick): return
         for chair in line.strip().split():
             chair = html(chair.strip())
-            if not self.chairs.has_key(chair):
+            if chair not in self.chairs:
                 self.addnick(chair, lines=0)
                 self.chairs.setdefault(chair, True)
                 self.reply("Chair added: %s"%chair)
@@ -158,7 +158,7 @@ class MeetingCommands(object):
         if not self.isChair(nick): return
         for chair in line.strip().split():
             chair = html(chair.strip())
-            if self.chairs.has_key(chair):
+            if chair in self.chairs:
                 del self.chairs[chair]
                 self.reply("Chair removed: %s"%chair)
     def do_undo(self, nick, **kwargs):
@@ -261,7 +261,7 @@ class Meeting(MeetingCommands, object):
         self.attendees[nick] = self.attendees.get(nick, 0) + lines
     def isChair(self, nick):
         """Is the nick a chair?"""
-        return (nick == self.owner or self.chairs.has_key(nick))
+        return (nick == self.owner  or  nick in self.chairs)
     # Primary enttry point for new lines in the log:
     def addline(self, nick, line, time_=None):
         """This is the way to add lines to the Meeting object.
