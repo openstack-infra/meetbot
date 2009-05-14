@@ -55,8 +55,9 @@ RestrictPerm = stat.S_IRWXO|stat.S_IRWXG  # g,o perm zeroed
 # RestrictPerm = stat.S_IRWXU|stat.S_IRWXO|stat.S_IRWXG  # u,g,o perm zeroed.
 # used to detect #link :
 UrlProtocols = ('http:', 'https:', 'irc:', 'ftp:', 'mailto:', 'ssh:')
-# regular expression for parsing commands
-command_RE = re.compile('#([\w]+)(?:[ \t]*(.*))?')
+# regular expression for parsing commands.  First group is the command name,
+# second group is the rest of the line.
+command_RE = re.compile(r'#([\w]+)[ \t]*(.*)')
 # This is the help printed when a meeting starts
 usefulCommands = "#action #agreed #halp #info #idea #link #topic"
 # The channels which won't have date/time appended to the filename.
