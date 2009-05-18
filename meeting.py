@@ -120,13 +120,10 @@ class MeetingCommands(object):
     def do_topic(self, nick, line, **kwargs):
         """Set a new topic in the channel."""
         if not self.isChair(nick): return
+        self.currenttopic = line
         m = Topic(nick=nick, line=line, **kwargs)
         self.minutes.append(m)
-        if self._meetingTopic:
-            topic = '%s (Meeting topic: %s)'%(line, self._meetingTopic)
-        else:
-            topic = line
-        self.topic(topic)
+        self.settopic()
     def do_meetingtopic(self, nick, line, **kwargs):
         """Set a meeting topic (included in all sub-topics)"""
         if not self.isChair(nick): return
@@ -135,7 +132,7 @@ class MeetingCommands(object):
             self._meetingTopic = None
         else:
             self._meetingTopic = line
-            self.reply("The meeting topic is now: %s"%line)
+        self.settopic()
     def do_save(self, nick, time_, **kwargs):
         """Add a chair to the meeting."""
         if not self.isChair(nick): return
@@ -235,6 +232,7 @@ class Meeting(MeetingCommands, object):
                  filename=None, writeRawLog=True):
         self.owner = owner
         self.channel = channel
+        self.currenttopic = ""
         self.oldtopic = oldtopic
         self.lines = [ ]
         self.minutes = [ ]
@@ -259,6 +257,14 @@ class Meeting(MeetingCommands, object):
             self._setTopic(x)
         else:
             print enc("TOPIC:", x)
+    def settopic(self):
+        "The actual code to set the topic"
+        if self._meetingTopic:
+            topic = '%s (Meeting topic: %s)'%(self.currenttopic,
+                                              self._meetingTopic)
+        else:
+            topic = self.currenttopic
+        self.topic(topic)
     def addnick(self, nick, lines=1):
         """This person has spoken, lines=<how many lines>"""
         self.attendees[nick] = self.attendees.get(nick, 0) + lines
