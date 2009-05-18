@@ -81,6 +81,8 @@ except ImportError:
 def html(text):
     """Escape bad sequences (in HTML) in user-generated lines."""
     return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+def enc(text): return text.encode('utf-8', 'replace')
+def dec(text): return text.decode('utf-8', 'replace')
 
 # Set the timezone, using the variable above
 os.environ['TZ'] = timeZone
@@ -250,13 +252,13 @@ class Meeting(MeetingCommands, object):
         if hasattr(self, '_sendReply') and not self._lurk:
             self._sendReply(x)
         else:
-            print "REPLY:", x
+            print enc("REPLY:", x)
     def topic(self, x):
         """Set the topic in the IRC channel."""
         if hasattr(self, '_setTopic') and not self._lurk:
             self._setTopic(x)
         else:
-            print "TOPIC:", x
+            print enc("TOPIC:", x)
     def addnick(self, nick, lines=1):
         """This person has spoken, lines=<how many lines>"""
         self.attendees[nick] = self.attendees.get(nick, 0) + lines
@@ -270,6 +272,8 @@ class Meeting(MeetingCommands, object):
         nick = html(nick)
         self.addnick(nick)
         line = line.strip(' \x01') # \x01 is present in ACTIONs
+        nick = dec(nick)
+        line = dec(line)
         # Setting a custom time is useful when replying logs,
         # otherwise use our current time:
         if time_ is None: time_ = time.localtime()
@@ -338,6 +342,7 @@ class Meeting(MeetingCommands, object):
     def writeMinutes(self):
         """Write the minutes summary."""
         f = file(self.minutesFilename(), 'w')
+        data = [ ]
         # We might want to restrict read-permissions of the files from
         # the webserver.
         if self._restrictlogs:
@@ -348,7 +353,7 @@ class Meeting(MeetingCommands, object):
         else:
             pageTitle = "%s Meeting"%self.channel
         # Header and things stored
-        print >> f, \
+        data.append(
         '''<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
         <html>
         <head>
@@ -361,30 +366,30 @@ class Meeting(MeetingCommands, object):
         \n\n<table border=1>'''%(pageTitle, pageTitle, self.owner,
                              time.strftime("%H:%M:%S", self.starttime),
                              timeZone,
-                             os.path.basename(self.logFilename()))
+                             os.path.basename(self.logFilename())))
         # Add all minute items to the table
         for m in self.minutes:
-            print >> f, m.html(self)
+            data.append(m.html(self))
         # End the log portion
-        print >> f, """</table>
+        data.append("""</table>
         Meeting ended at %s %s.  (<a href="%s">full logs</a>)"""%\
             (time.strftime("%H:%M:%S", self.endtime), timeZone,
-             os.path.basename(self.logFilename()))
-        print >> f, "\n<br><br><br>"
+             os.path.basename(self.logFilename())))
+        data.append("\n<br><br><br>")
 
 
         # Action Items
-        print >> f, "<b>Action Items</b><ol>"
+        data.append("<b>Action Items</b><ol>")
         import meeting
         for m in self.minutes:
             # The hack below is needed because of pickling problems
             if not isinstance(m, (Action, meeting.Action)): continue
-            print >> f, "  <li>%s</li>"%m.line #already escaped
-        print >> f, "</ol>\n\n<br>"
+            data.append("  <li>%s</li>"%m.line) #already escaped
+        data.append("</ol>\n\n<br>")
         
 
         # Action Items, by person (This could be made lots more efficient)
-        print >> f, "<b>Action Items, by person</b>\n<ol>"
+        data.append("<b>Action Items, by person</b>\n<ol>")
         for nick in sorted(self.attendees.keys(), key=lambda x: x.lower()):
             headerPrinted = False
             for m in self.minutes:
@@ -392,42 +397,45 @@ class Meeting(MeetingCommands, object):
                 if not isinstance(m, (Action, meeting.Action)): continue
                 if m.line.find(nick) == -1: continue
                 if not headerPrinted:
-                    print >> f, "  <li> %s <ol>"%nick
+                    data.append("  <li> %s <ol>"%nick)
                     headerPrinted = True
-                print >> f, "    <li>%s</li>"%m.line # already escaped
+                data.append("    <li>%s</li>"%m.line) # already escaped
                 m.assigned = True
             if headerPrinted:
-                print >> f, "  </ol></li>"
+                data.append("  </ol></li>")
         # unassigned items:
-        print >> f, "  <li><b>UNASSIGNED</b><ol>"
+        data.append("  <li><b>UNASSIGNED</b><ol>")
         numberUnassigned = 0
         for m in self.minutes:
             if not isinstance(m, (Action, meeting.Action)): continue
             if getattr(m, 'assigned', False): continue
-            print >> f, "    <li>%s</li>"%m.line # already escaped
+            data.append("    <li>%s</li>"%m.line) # already escaped
             numberUnassigned += 1
-        if numberUnassigned == 0: print >> f, "    <li>(none)</li>"
-        print >> f, '  </ol>\n</li>'
+        if numberUnassigned == 0: data.append("    <li>(none)</li>")
+        data.append('  </ol>\n</li>')
         # clean-up
-        print >> f, "</ol>\n\n<br>"
+        data.append("</ol>\n\n<br>")
 
 
         # People Attending
-        print >> f, """<b>People Present (lines said):</b><ol>"""
+        data.append("""<b>People Present (lines said):</b><ol>""")
         # sort by number of lines spoken
         nicks = [ (n,c) for (n,c) in self.attendees.iteritems() ]
         nicks.sort(key=lambda x: x[1], reverse=True)
         for nick in nicks:
-            print >> f, '  <li>%s (%s)</li>'%(nick[0], nick[1])
-        print >> f, "</ol>\n\n<br>"
-        print >> f, """Generated by <a href="%s">MeetBot</a>."""%MeetBotInfoURL
-        print >> f, "</body></html>"
+            data.append('  <li>%s (%s)</li>'%(nick[0], nick[1]))
+        data.append("</ol>\n\n<br>")
+        data.append("""Generated by <a href="%s">MeetBot</a>."""%
+                                                             MeetBotInfoURL)
+        data.append("</body></html>")
+
+        f.write(enc("\n".join(data)))
     def writeRawLog(self):
         """Write raw text logs."""
         f = file(self.logFilename(raw=True), 'w')
         if self._restrictlogs:
             self.restrictPermissions(f)
-        f.write("\n".join(self.lines))
+        f.write(enc("\n".join(self.lines)))
     def filename(self, url=False):
         # provide a way to override the filename.  If it is
         # overridden, it must be a full path (and the URL-part may not
