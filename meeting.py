@@ -109,14 +109,14 @@ class MeetingCommands(object):
     def do_endmeeting(self, nick, time_, **kwargs):
         """End the meeting."""
         if not self.isChair(nick): return
+        if self.oldtopic:
+            self.topic(self.oldtopic)
         self.endtime = time_
         self.save()
         self.reply("Meeting ended %s %s.  Information about MeetBot at %s ."%\
                    (time.asctime(time_), timeZone, MeetBotInfoURL))
         self.reply("Minutes: "+self.minutesFilename(url=True))
         self.reply("Log:     "+self.logFilename(url=True))
-        if hasattr(self, 'oldtopic'):
-            self.topic(self.oldtopic)
     def do_topic(self, nick, line, **kwargs):
         """Set a new topic in the channel."""
         if not self.isChair(nick): return
@@ -250,13 +250,13 @@ class Meeting(MeetingCommands, object):
         if hasattr(self, '_sendReply') and not self._lurk:
             self._sendReply(x)
         else:
-            print enc("REPLY:", x)
+            print "REPLY:", enc(x)
     def topic(self, x):
         """Set the topic in the IRC channel."""
         if hasattr(self, '_setTopic') and not self._lurk:
             self._setTopic(x)
         else:
-            print enc("TOPIC:", x)
+            print "TOPIC:", enc(x)
     def settopic(self):
         "The actual code to set the topic"
         if self._meetingTopic:
