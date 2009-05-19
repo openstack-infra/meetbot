@@ -70,14 +70,6 @@ pygmentizeStyle = 'friendly'
 # of the TZ environment variable.
 timeZone = 'UTC'
 
-# load custom local configurations
-try:
-    import meetingLocalConfig
-    meetingLocalConfig = reload(meetingLocalConfig)
-    from meetingLocalConfig import *
-except ImportError:
-    pass
-
 def html(text):
     """Escape bad sequences (in HTML) in user-generated lines."""
     return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
@@ -87,6 +79,22 @@ def dec(text): return text.decode('utf-8', 'replace')
 # Set the timezone, using the variable above
 os.environ['TZ'] = timeZone
 time.tzset()
+
+def parse_time(time_):
+    try: return time.strptime(time_, "%H:%M:%S")
+    except ValueError: pass
+    try: return time.strptime(time_, "%H:%M")
+    except ValueError: pass
+logline_re = re.compile(r'\[?([0-9: ]*)\]? ?<([ \w]+)> (.*)')
+
+# load custom local configurations
+try:
+    import meetingLocalConfig
+    meetingLocalConfig = reload(meetingLocalConfig)
+    from meetingLocalConfig import *
+except ImportError:
+    pass
+
 
 
 class MeetingCommands(object):
@@ -544,13 +552,6 @@ class Link:
         <td>%(itemtype)s</td><td>%(nick)s</td><td><a href="%(url)s">%(url_readable)s</a> %(line)s</td>
         </tr>"""%self.__dict__
 
-
-def parse_time(time_):
-    try: return time.strptime(time_, "%H:%M:%S")
-    except ValueError: pass
-    try: return time.strptime(time_, "%H:%M")
-    except ValueError: pass
-
 # None of this is very well refined.
 if __name__ == '__main__':
     import sys
@@ -568,8 +569,7 @@ if __name__ == '__main__':
                     filename=filename, writeRawLog=False)
         for line in file(sys.argv[2]):
             # match regular spoken lines:
-            r = re.compile(r'\[?([0-9: ]+)\]? <([ \w]+)> (.*)')
-            m = r.match(line)
+            m = logline_re.match(line)
             if m:
                 time_ = parse_time(m.group(1).strip())
                 nick = m.group(2).strip()
