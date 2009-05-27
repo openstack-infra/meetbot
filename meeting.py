@@ -237,7 +237,7 @@ class Meeting(MeetingCommands, object):
     _lurk = False
     _restrictlogs = False
     def __init__(self, channel, owner, oldtopic=None,
-                 filename=None, writeRawLog=True):
+                 filename=None, writeRawLog=False):
         self.owner = owner
         self.channel = channel
         self.currenttopic = ""

@@ -80,7 +80,8 @@ class MeetBot(callbacks.Plugin):
                 irc.error("Can't start another meeting, one is in progress.")
                 return
             M = meeting.Meeting(channel=channel, owner=nick,
-                                oldtopic=irc.state.channels[channel].topic)
+                                oldtopic=irc.state.channels[channel].topic,
+                                writeRawLog=True)
             self.Meetings[Mkey] = M
             # This callback is used to send data to the channel:
             def _setTopic(x):
