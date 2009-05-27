@@ -86,6 +86,7 @@ def parse_time(time_):
     try: return time.strptime(time_, "%H:%M")
     except ValueError: pass
 logline_re = re.compile(r'\[?([0-9: ]*)\]? ?<([ \w]+)> (.*)')
+loglineAction_re = re.compile(r'\[?([0-9: ]*)\]? \* ([\w]+) (.*)')
 
 # load custom local configurations
 try:
@@ -578,8 +579,7 @@ if __name__ == '__main__':
                     M.owner = nick ; M.chairs = {nick:True}
                 M.addline(nick, line, time_=time_)
             # match /me lines
-            r = re.compile(r'\[?([0-9: ]+)\]? \* ([\w]+) (.*)')
-            m = r.match(line)
+            m = loglineAction_re.match(line)
             if m:
                 time_ = parse_time(m.group(1).strip())
                 nick = m.group(2).strip()
