@@ -43,3 +43,11 @@ expert users can enlighten me as to better ways to do things.
 In particular, supybot has a large configuration system, which I know
 nothing about.  It may be worth hooking MeetBot into that system.
 
+
+
+LICENSE
+~~~~~~~
+The MeetBot plugin is under the same license as supybot is, a 3-clause
+BSD.  The license is documented in each code file (and also applies to
+this README file).
+
