@@ -126,6 +126,7 @@ class MeetingCommands(object):
                    (time.asctime(time_), timeZone, MeetBotInfoURL))
         self.reply("Minutes: "+self.minutesFilename(url=True))
         self.reply("Log:     "+self.logFilename(url=True))
+        self._meetingIsOver = True
     def do_topic(self, nick, line, **kwargs):
         """Set a new topic in the channel."""
         if not self.isChair(nick): return
@@ -249,6 +250,7 @@ class Meeting(MeetingCommands, object):
         self.chairs = { }
         self._writeRawLog = writeRawLog
         self._meetingTopic = None
+        self._meetingIsOver = False
         if filename:
             self._filename = filename
 

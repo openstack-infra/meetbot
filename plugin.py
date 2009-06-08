@@ -95,7 +95,7 @@ class MeetBot(callbacks.Plugin):
         # Add line to our meeting buffer.
         M.addline(nick, payload)
         # End meeting if requested:
-        if payload[:11] == '#endmeeting':
+        if M._meetingIsOver:
             #M.save()  # now do_endmeeting in M calls the save functions
             del self.Meetings[Mkey]
 
