@@ -157,7 +157,7 @@ class MeetingCommands(object):
     def do_chair(self, nick, line, **kwargs):
         """Add a chair to the meeting."""
         if not self.isChair(nick): return
-        for chair in line.strip().split():
+        for chair in re.split('[, ]+', line.strip()):
             chair = html(chair.strip())
             if chair not in self.chairs:
                 self.addnick(chair, lines=0)
