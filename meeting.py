@@ -481,14 +481,16 @@ class Meeting(MeetingCommands, object):
         if raw:
             extension = '.log.txt'
         fname = self.filename(url=url)+extension
-        if not url and not os.access(os.path.dirname(fname), os.F_OK):
-            os.makedirs(os.path.dirname(fname))
+        dirname = os.path.dirname(fname)
+        if not url and dirname and not os.access(dirname, os.F_OK):
+            os.makedirs(dirname)
         return fname
     def minutesFilename(self, url=False):
         """Name of the meeting minutes file"""
         fname = self.filename(url=url)+'.html'
-        if not url and not os.access(os.path.dirname(fname), os.F_OK):
-            os.makedirs(os.path.dirname(fname))
+        dirname = os.path.dirname(fname)
+        if not url and dirname and not os.access(dirname, os.F_OK):
+            os.makedirs(dirname)
         return fname
     def restrictPermissions(self, f):
         """Remove the permissions given in the variable RestrictPerm."""
