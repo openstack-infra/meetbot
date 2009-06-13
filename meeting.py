@@ -85,8 +85,8 @@ def parse_time(time_):
     except ValueError: pass
     try: return time.strptime(time_, "%H:%M")
     except ValueError: pass
-logline_re = re.compile(r'\[?([0-9: ]*)\]? ?<([ \w]+)> (.*)')
-loglineAction_re = re.compile(r'\[?([0-9: ]*)\]? \* ([\w]+) (.*)')
+logline_re = re.compile(r'\[?([0-9: ]*)\]? *<[@+]?([^>]+)> *(.*)')
+loglineAction_re = re.compile(r'\[?([0-9: ]*)\]? *\* *([^ ]+) *(.*)')
 
 # load custom local configurations
 try:
