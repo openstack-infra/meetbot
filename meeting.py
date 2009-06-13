@@ -517,6 +517,8 @@ class Topic:
         </tr>"""%self.__dict__
 class GenericItem:
     itemtype = ''
+    start = ''
+    end = ''
     def __init__(self, nick, line, linenum, time_):
         self.nick = nick ; self.line = line ; self.linenum = linenum
         self.time = time.strftime("%H:%M:%S", time_)
@@ -524,10 +526,11 @@ class GenericItem:
         self.link = os.path.basename(M.logFilename())
         self.line = html(self.line)
         self.anchor = 'l-'+str(self.linenum)
-        self.__dict__['itemtype'] = self.itemtype
+        replacements = self.__class__.__dict__
+        replacements.update(self.__dict__)
         return """<tr><td><a href='%(link)s#%(anchor)s'>%(time)s</a></td>
-        <td>%(itemtype)s</td><td>%(nick)s</td><td>%(line)s</td>
-        </tr>"""%self.__dict__
+        <td>%(itemtype)s</td><td>%(nick)s</td><td>%(start)s%(line)s%(end)s</td>
+        </tr>"""%replacements
 class Info(GenericItem):
     itemtype = 'INFO'
 class Idea(GenericItem):
