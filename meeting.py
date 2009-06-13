@@ -162,7 +162,9 @@ class MeetingCommands(object):
             if chair not in self.chairs:
                 self.addnick(chair, lines=0)
                 self.chairs.setdefault(chair, True)
-                self.reply("Chair added: %s"%chair)
+        chairs = dict(self.chairs) # make a copy
+        chairs.setdefault(self.owner, True)
+        self.reply("Current chairs: %s"%(" ".join(sorted(chairs.keys()))))
     def do_unchair(self, nick, line, **kwargs):
         """Remove a chair to the meeting (founder can not be removed)."""
         if not self.isChair(nick): return
@@ -170,7 +172,9 @@ class MeetingCommands(object):
             chair = html(chair.strip())
             if chair in self.chairs:
                 del self.chairs[chair]
-                self.reply("Chair removed: %s"%chair)
+        chairs = dict(self.chairs) # make a copy
+        chairs.setdefault(self.owner, True)
+        self.reply("Current chairs: %s"%(" ".join(sorted(chairs.keys()))))
     def do_undo(self, nick, **kwargs):
         """Remove the last item from the minutes."""
         if not self.isChair(nick): return
