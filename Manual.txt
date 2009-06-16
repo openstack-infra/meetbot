@@ -1,0 +1,145 @@
+COMMANDS
+========
+
+#startmeeting
+  Starts a meeting.
+
+#endmeeting
+  End a meeting, save logs, restore previous topic, give links to
+  logs.  You know the drill.
+
+#topic
+  Set the current topic of discussion.  MeetBot changes the topic in
+  the channel (saving the original topic to be restored at the end of
+  the meeting).
+
+#meetingtopic
+  Sets the "meeting topic".  This will always appear in the topic in
+  the channel, even as the #topic changes.  The format of the IRCtopic
+  is "<topic> (Meeting Topic: <meeting topic>)".
+
+#save
+  Write out the logs right now.
+
+#agreed (alias #agree)
+  Mark something as agreed on.  The rest of the line is the details.
+
+#accepted (alias #accept)
+  Mark something as agreed on.  The rest of the line is the details.
+
+#rejected (alias #reject)
+  Mark something as agreed on.  The rest of the line is the details.
+
+#chair and #unchair
+  Add new chairs to the meeting.  The rest of the line is a list of
+  nicks, separated by commas and spaces.  The nick which started the
+  meeting is the ``owner`` and can't be de-chaired.
+
+#undo
+  Remove the last item from the meeting minutes.  Only applies to
+  commands which appear in the final output.
+
+#restrictlogs
+  When logs are saved, remove the permissions specified in the
+  configuration variable ``RestrictPerm``
+
+#lurk and #unlurk
+  When ``lurk`` is set, MeetBot will only passively listen and take
+  notes (and save the notes), not reply or change the topic  This is
+  useful for when you don't want disruptions during the meeting.
+
+#meetingname
+  Provide a friendly name which can be used as a variable in the
+  filename patterns.  For example, you can set 
+  filenamePattern = '%(channel)s/%%Y/%(meetingname)s.%%F-%%H.%%M'
+  to allow #meetingname to categorize multiple types of meeting
+  occurring in one channel.
+
+  All spaces are removed from the rest of the line and the string is
+  converted to lowercase.  If ``meetingname`` is not provided, it
+  defaults to ``channel``.
+
+#action
+  Add an ``ACTION`` item to the minutes.  Provide irc nicks of people
+  involved, and there will be a listing of action items sorted by nick
+  at the end of the meeting.
+
+#info
+  Add an ``INFO`` item to the minutes.
+
+#idea
+  Add an ``IDEA`` to the minutes.
+
+#help (alias #halp)
+  Add a ``HELP`` item to the minutes.  Confusingly, this does *not* give
+  supybot help.  See #commands.
+
+#nick
+  Make a nick be recognized by supybot, even though it hasn't said
+  anything.  This is only useful in order to make a list of action
+  items be grouped by this nick at the end of the meeting.
+
+#link
+  Add a link to the minutes.  The URL must be the first thing on the
+  line, separated by a space from the rest of the line, and it will be
+  properly hyperlinked.  This is automatically detected if the line
+  starts with http:, https:, mailto:, and some other common protocols
+  defined in the ``UrlProtocols`` configuration variable.
+
+#commands
+  List recognized supybot commands.  This is the better "help" command.
+
+
+LESS-USED COMMANDS
+==================
+
+
+
+
+ADMIN COMMANDS
+==============
+
+These commands are for the bot owners to.  The expected use is when
+the bot is on many channels as a public service, and the bot owner
+sometimes needs to be able to monitor and adjust the overall
+situation.
+
+All of these are regular supybot commands (as opposed to the commands
+above).  That means that the supybot capability system applies, and
+they can be given either in any channel, either by direct address
+(``BotName: <command> <args> ...``) or with the bot prefix character
+(``@<commandname> <args> ...``).
+
+These are restricted to anyone with the ``admin`` capability on the
+bot.
+
+``listmeetings``
+  List all meetings.
+
+``savemeetings``
+  Saves all active meetings on all channels and all networks.
+
+``addchair <channel> <network> <nick>``
+  Forcibly adds this nick as a chair on the giver channel on the given
+  network, if a meeting is active there.
+
+``deletemeeting <channel> <network> <saveit=True>``
+  Delete a meeting from the cache.  If save is given, save the meeting
+  first.  The default value of ``save`` is True.
+
+
+CONFIGURATION
+=============
+
+::
+
+  logFileDir = '/home/richard/meetbot/'
+  logUrlPrefix = 'http://rkd.zgib.net/meetbot/'
+
+::
+
+  filenamePattern = '%(channel)s/%%Y/%(channel)s.%%F-%%H.%%M'
+
+::
+
+  MeetBotInfoURL
