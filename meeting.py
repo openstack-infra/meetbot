@@ -171,6 +171,7 @@ class MeetingCommands(object):
         if not self.isChair(nick): return
         for chair in re.split('[, ]+', line.strip()):
             chair = html(chair.strip())
+            if not chair: continue
             if chair not in self.chairs:
                 self.addnick(chair, lines=0)
                 self.chairs.setdefault(chair, True)
