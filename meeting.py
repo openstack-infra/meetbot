@@ -236,8 +236,10 @@ class MeetingCommands(object):
         """Make meetbot aware of a nick which hasn't said anything.
 
         To see where this can be used, see #action command"""
-        nicks = line.strip().split()
+        nicks = re.split('[, ]+', line.strip())
         for nick in nicks:
+            nick = nick.strip()
+            if not nick: continue
             self.addnick(html(nick), lines=0)
     def do_link(self, **kwargs):
         """Add informational item to the minutes."""
