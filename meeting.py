@@ -530,8 +530,10 @@ class GenericItem:
         self.link = os.path.basename(M.logFilename())
         self.line = html(self.line)
         self.anchor = 'l-'+str(self.linenum)
-        replacements = self.__class__.__dict__
-        replacements.update(self.__dict__)
+        replacements = { }
+        for name in dir(self):
+            if name[0] == "_": continue
+            replacements[name] = getattr(self, name)
         return """<tr><td><a href='%(link)s#%(anchor)s'>%(time)s</a></td>
         <td>%(itemtype)s</td><td>%(nick)s</td><td>%(start)s%(line)s%(end)s</td>
         </tr>"""%replacements
