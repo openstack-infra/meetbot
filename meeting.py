@@ -154,6 +154,18 @@ class MeetingCommands(object):
         m = Agreed(nick, **kwargs)
         self.minutes.append(m)
     do_agree = do_agreed
+    def do_accepted(self, nick, **kwargs):
+        """Add aggreement to the minutes - chairs only."""
+        if not self.isChair(nick): return
+        m = Accepted(nick, **kwargs)
+        self.minutes.append(m)
+    do_accept = do_accepted
+    def do_rejected(self, nick, **kwargs):
+        """Add aggreement to the minutes - chairs only."""
+        if not self.isChair(nick): return
+        m = Rejected(nick, **kwargs)
+        self.minutes.append(m)
+    do_rejected = do_rejected
     def do_chair(self, nick, line, **kwargs):
         """Add a chair to the meeting."""
         if not self.isChair(nick): return
@@ -547,6 +559,14 @@ class Action(GenericItem):
     itemtype = 'ACTION'
 class Halp(GenericItem):
     itemtype = 'HALP'
+class Accepted(GenericItem):
+    itemtype = 'ACCEPTED'
+    start = '<font color="green">'
+    end = '</font>'
+class Rejected(GenericItem):
+    itemtype = 'REJECTED'
+    start = '<font color="red">'
+    end = '</font>'
 class Link:
     itemtype = 'LINK'
     def __init__(self, nick, line, linenum, time_):
