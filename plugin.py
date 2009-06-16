@@ -106,6 +106,8 @@ class MeetBot(callbacks.Plugin):
             #M.save()  # now do_endmeeting in M calls the save functions
             del meeting_cache[Mkey]
 
+    # These are admin commands, for use by the bot owner when there
+    # are many channels which may need to be independently managed.
     def listmeetings(self, irc, msg, args):
         """List all currently-active meetings."""
         reply = ""
@@ -114,15 +116,45 @@ class MeetBot(callbacks.Plugin):
             irc.reply("No currently active meetings.")
         else:
             irc.reply(reply)
-    listmeetings = wrap(listmeetings, ['private', 'owner'])
-
+    listmeetings = wrap(listmeetings, ['admin'])
     def savemeetings(self, irc, msg, args):
         """Save all currently active meetings."""
         numSaved = 0
         for M in meeting_cache:
             M.save()
         irc.reply("Saved %d meetings."%numSaved)
-    savemeetings = wrap(savemeetings, ['owner'])
+    savemeetings = wrap(savemeetings, ['admin'])
+    def addchair(self, irc, msg, args, channel, network, nick):
+        """<channel> <network> <nick>
+
+        Add a nick as a chair to the meeting."""
+        Mkey = (channel,network)
+        M = meeting_cache.get(Mkey, None)
+        if not M:
+            irc.reply("Meeting on channel %s, network %s not found"%(
+                channel, network))
+            return
+        M.chairs.setdefault(nick, True)
+        irc.reply("Chair added: %s on (%s, %s)."%(nick, channel, network))
+    addchair = wrap(addchair, ['admin', "channel", "something", "nick"])
+    def deletemeeting(self, irc, msg, args, channel, network, save):
+        """<channel> <network> <saveit=True>
+
+        Delete a meeting from the cache.  If save is given, save the
+        meeting first, defaults to saving."""
+        Mkey = (channel,network)
+        if Mkey not in meeting_cache:
+            irc.reply("Meeting on channel %s, network %s not found"%(
+                channel, network))
+            return
+        if save:
+            M = meeting_cache.get(Mkey, None)
+            import time
+            M.endtime = time.localtime()
+            M.save()
+        irc.reply("Deleted: meeting on (%s, %s)."%(channel, network))
+    deletemeeting = wrap(deletemeeting, ['admin', "channel", "something",
+                               optional("boolean", True)])
 
     def pingall(self, irc, msg, args, message):
         """Send a broadcast ping to all users on the channel.
