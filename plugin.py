@@ -39,6 +39,15 @@ import time
 import meeting
 meeting = reload(meeting)
 
+# By doing this, we can not lose all of our meetings across plugin
+# reloads.  But, of course, you can't change the source too
+# drastically if you do that!
+try:
+    meeting_cache
+except NameError:
+    meeting_cache = {}
+                
+
 class MeetBot(callbacks.Plugin):
     """Add the help for "@plugin help MeetBot" here
     This should describe *how* to use this plugin."""
@@ -47,8 +56,6 @@ class MeetBot(callbacks.Plugin):
         self.__parent = super(MeetBot, self)
         self.__parent.__init__(irc)
                         
-        self.Meetings = { }
-    
     # Instead of using real supybot commands, I just listen to ALL
     # messages coming in and respond to those beginning with our
     # prefix char.  I found this helpful from a not duplicating logic
@@ -72,7 +79,7 @@ class MeetBot(callbacks.Plugin):
         # of different servers/channels.
         # (channel, network) tuple is our lookup key.
         Mkey = (channel,irc.msg.tags['receivedOn']) 
-        M = self.Meetings.get(Mkey, None)
+        M = meeting_cache.get(Mkey, None)
 
         # Start meeting if we are requested
         if payload[:13] == '#startmeeting':
@@ -82,7 +89,7 @@ class MeetBot(callbacks.Plugin):
             M = meeting.Meeting(channel=channel, owner=nick,
                                 oldtopic=irc.state.channels[channel].topic,
                                 writeRawLog=True)
-            self.Meetings[Mkey] = M
+            meeting_cache[Mkey] = M
             # This callback is used to send data to the channel:
             def _setTopic(x):
                 irc.sendMsg(ircmsgs.topic(channel, x))
@@ -97,12 +104,12 @@ class MeetBot(callbacks.Plugin):
         # End meeting if requested:
         if M._meetingIsOver:
             #M.save()  # now do_endmeeting in M calls the save functions
-            del self.Meetings[Mkey]
+            del meeting_cache[Mkey]
 
     def listmeetings(self, irc, msg, args):
         """List all currently-active meetings."""
         reply = ""
-        reply = ", ".join(str(x) for x in sorted(self.Meetings.keys()) )
+        reply = ", ".join(str(x) for x in sorted(meeting_cache.keys()) )
         if reply.strip() == '':
             irc.reply("No currently active meetings.")
         else:
@@ -112,7 +119,7 @@ class MeetBot(callbacks.Plugin):
     def savemeetings(self, irc, msg, args):
         """Save all currently active meetings."""
         numSaved = 0
-        for M in self.Meetings:
+        for M in meeting_cache:
             M.save()
         irc.reply("Saved %d meetings."%numSaved)
     savemeetings = wrap(savemeetings, ['owner'])
