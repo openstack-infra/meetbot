@@ -208,6 +208,13 @@ class MeetingCommands(object):
         """Do interact in the channel."""
         if not self.isChair(nick): return
         self._lurk = False
+    def do_meetingname(self, nick, time_, line, **kwargs):
+        """Set the variable (meetingname) which can be used in save.
+
+        If this isn't set, it defaults to the channel name."""
+        meetingname = line.strip().lower().replace(" ", "")
+        self._meetingname = meetingname
+        self.reply("The meeting name has been set to '%s'"%meetingname)
     # Commands for Anyone:
     def do_action(self, **kwargs):
         """Add action item to the minutes.
@@ -269,6 +276,7 @@ class Meeting(MeetingCommands, object):
         self.chairs = { }
         self._writeRawLog = writeRawLog
         self._meetingTopic = None
+        self._meetingname = ""
         self._meetingIsOver = False
         if filename:
             self._filename = filename
@@ -487,6 +495,10 @@ class Meeting(MeetingCommands, object):
         else:
             pattern = filenamePattern
         channel = self.channel.strip('# ')
+        if self._meetingname:
+            meetingname = self._meetingname
+        else:
+            meetingname = channel
         path = pattern%locals()
         path = time.strftime(path, self.starttime)
         # If we want the URL name, append URL prefix and return
