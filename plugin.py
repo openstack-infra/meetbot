@@ -153,6 +153,46 @@ class MeetBot(callbacks.Plugin):
 
     pingall = wrap(pingall, [optional('text', None)])
 
+    def __getattr__(self, name):
+        """Proxy between proper supybot commands and # MeetBot commands.
+
+        This allows you to use MeetBot: <command> <line of the command>
+        instead of the typical #command version.  However, it's disabled
+        by default as there are some possible unresolved issues with it.
+
+        To enable this, you must comment out a line in the main code.
+        It may be enabled in a future version.
+        """
+        # First, proxy to our parent classes (__parent__ set in __init__)
+        try:
+            return self.__parent.__getattr__(name)
+        except AttributeError:
+            pass
+        # Disabled for now.  Uncomment this if you want to use this.
+        raise AttributeError
+
+        if not hasattr(meeting.Meeting, "do_"+name):
+            raise AttributeError
+
+        def wrapped_function(self, irc, msg, args, message):
+            channel = msg.args[0]
+            payload = msg.args[1]
+
+            #from fitz import interactnow ; reload(interactnow)
+
+            #print type(payload)
+            payload = "#%s %s"%(name,message)
+            #print payload
+            import copy
+            msg = copy.copy(msg)
+            msg.args = (channel, payload)
+
+            self.doPrivmsg(irc, msg)
+        # Give it the signature we need to be a callable supybot
+        # command (it does check more than I'd like).  Heavy Wizardry.
+        instancemethod = type(self.__getattr__)
+        wrapped_function = wrap(wrapped_function, [optional('text', '')])
+        return instancemethod(wrapped_function, self, MeetBot)
 
 Class = MeetBot
 
