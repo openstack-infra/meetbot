@@ -1,39 +1,227 @@
-COMMANDS
+==============
+Supybot Manual
+==============
+
+
+
+Introduction
+============
+
+MeetBot is a plugin to the IRC bot supybot to facilitate taking of
+notes during IRC meetings.  This allows you to better communicate with
+your project or groups after the IRC meeting, as well as keep the
+meeting more under control and on-topic.
+
+This manual is for user and meeting chair reference.  For installation
+support, see ``README.txt``.
+
+
+
+
+Tutorial
 ========
 
+Let's go through, step by step, how a typical meeting might run::
+
+  < MrBeige> #startmeeting
+
+We use the ``#startmeeting`` command to tell MeetBot to start the
+meeting.  The person who calls the command becomes the chair - having
+the power to guide the meeting.  However, by default MeetBot allows
+other participants to enter most things into the logs, since inviting
+contributions is generally a good thing.::
+
+  < MeetBot> Meeting started Wed Jun 17 05:00:49 2009 UTC.  The chair
+             is MrBeige.
+  < MeetBot> Information about MeetBot at
+             http://wiki.debian.org/MeetBot , Useful Commands: #action
+             #agreed #halp #info #idea #link #topic.
+
+MeetBot gives us a little bit of information about the meeting.::
+
+  < MrBeige> #topic should we release or not?
+  -!- MeetBot changed the topic of #meetbot-test to: should we release
+      or not?
+
+We use the ``#topic`` command to tell MeetBot to move to the first
+topic.  MeetBot sets the topic in the channel to the topic which is
+given on the line.  Don't worry, the topic will be restored at the end
+of the meeting.::
+
+  < MrBeige> #info we have two major blocking bugs: the character set
+             conversion, and the segfaults heisenbug in the save
+             routine.
+
+When there is important things said, we don't want them to be lost in
+the irclogs.  Thus, we use the ``#info`` command to make a note of
+it in the meeting minutes.  It is also highlighted in the irclogs
+which MeetBot takes.::
+
+  < MrBeige> #agreed we give one week to fix these (no other changes
+             accepted), and then release
+
+We also have the ``#agreed`` command to use.  This can only be used by
+the chairs of the meeting, and should (obviously) be used to document
+agreement.  The rest of the line goes into the minutes as the thing
+agreed on.::
+
+  < MrBeige> #action MrGreen and MrMauve work together to fix the bugs
+  < MrBeige> #action MrBeige releases when done
+
+We have the ``#action`` command.  This one is works just like the last
+two, but has one extra feature: at the end of the meeting, it makes a
+list of "Action Items", useful for being sure things get taken care
+of.  But there is more: it also makes a list of action items sorted by
+*nick*.  This can be used to easily see what is assigned to you.  In
+order for an item to be sorted by a nick, that nick has got to say
+something during the meeting (but also see the ``#nick`` command), and
+you have to use their nick exactly (use tab completion!).::
+
+  < MrBeige> #topic goals for release after next
+  -!- MeetBot changed the topic of #meetbot-test to: goals for release
+      after next
+
+Moving on to the next topic...::
+
+  ...
+  < MrBeige> #info make it better
+  ...
+  < MrBeige> #info release faster
+  ...
+
+Record some of the important items from this section.::
+
+  < MrBeige> #endmeeting
+
+Hit the ``#endmeeting`` command.  The meeting ends, and logs and
+minutes are saved::
+
+  -!- MeetBot changed the topic of #meetbot-test to: General
+      discussion of MeetBot
+  < MeetBot> Meeting ended Wed Jun 17 05:03:45 2009 UTC.  Information
+             about MeetBot at http://wiki.debian.org/MeetBot .
+  < MeetBot> Minutes: http://rkd.zgib.net/meetbot/meetbot-test/meetbot-test.html
+  < MeetBot> Log: http://rkd.zgib.net/meetbot/meetbot-test/meetbot-test.log.html
+
+MeetBot conveniently tells us where all of the logs are stored.  You
+can look at the `logs`_ and `minutes`_ online.
+
+.. _logs: http://rkd
+.. _minutes: http://rkd
+
+
+
+
+Commands
+========
+
+All commands are case-insensitive, and use the ``#`` prefix
+character.   Not all commands have output.  This might be confusing,
+because you don't know if it's been acted on or not.  However, this is
+a conscious design decision to try to keep out of the way and not
+distract from the real people.  If something goes wrong, you can
+adjust and have MeetBot re-process the logs later.
+
 #startmeeting
-  Starts a meeting.
+  Starts a meeting.  The calling nick becomes the chair.  If any text
+  is given on the rest of the line, this becomes the meeting topic,
+  see ``#meetingtopic`` above.
 
 #endmeeting
   End a meeting, save logs, restore previous topic, give links to
-  logs.  You know the drill.
+  logs.  You know the drill.  (Chairs only.)
 
 #topic
   Set the current topic of discussion.  MeetBot changes the topic in
   the channel (saving the original topic to be restored at the end of
-  the meeting).
+  the meeting).  (Chairs only.)
+
+#agreed (alias #agree)
+  Mark something as agreed on.  The rest of the line is the details.
+  (Chairs only.)
+
+#chair and #unchair
+  Add new chairs to the meeting.  The rest of the line is a list of
+  nicks, separated by commas and/or spaces.  The nick which started
+  the meeting is the ``owner`` and can't be de-chaired.  The command
+  replies with a list of the current chairs, for verification (Chairs
+  only.)  Example::
+
+    < MrBeige> #chair MrGreen MsAlizarin
+    < MeetBot> Current chairs are: MsAlizarin MrBeige MrGreen
+
+#action
+
+  Add an ``ACTION`` item to the minutes.  Provide irc nicks of people
+  involved, and will be both a complete listing of action items, and a
+  listing of action items sorted by nick at the end of the meeting.
+  This is very useful for making sure this gets done.  Example::
+
+    < MrBeige> #action MrGreen will read the entire Internet to
+               determine why the hive cluster is under attack.
+
+  If MrGreen has said something during the meeting, this will be
+  automatically assigned to him.
+
+#info
+  Add an ``INFO`` item to the minutes.  Example::
+
+    < MrBeige> #info We need to spawn more overlords before the next
+               release.
+
+#link
+  Add a link to the minutes.  The URL must be the first thing on the
+  line, separated by a space from the rest of the line, and it will be
+  properly hyperlinked.  This command is automatically detected if the line
+  starts with http:, https:, mailto:, and some other common protocols
+  defined in the ``UrlProtocols`` configuration variable.  Examples::
+
+    < MrBeige> #link http://wiki.debian.org/MeetBot/ is the main page
+    < MrBeige> http://wiki.debian.org/MeetBot/ is the main page
+
+  Both of these two examples are equivalent, and will hyperlink
+  properly.  The first example below won't hyperlink properly, the
+  second one won't be automatically detected::
+
+    < MrBeige> #link the main page is http://wiki.debian.org/MeetBot/
+    < MrBeige> the main page is http://wiki.debian.org/MeetBot/
+
+
+
+
+Less-used Commands
+==================
 
 #meetingtopic
   Sets the "meeting topic".  This will always appear in the topic in
   the channel, even as the #topic changes.  The format of the IRCtopic
-  is "<topic> (Meeting Topic: <meeting topic>)".
+  is "<topic> (Meeting Topic: <meeting topic>)".  (Chairs only.)
 
-#save
-  Write out the logs right now.
+#commands
+  List recognized supybot commands.  This is the actual "help" command.
 
-#agreed (alias #agree)
-  Mark something as agreed on.  The rest of the line is the details.
+#idea
+  Add an ``IDEA`` to the minutes.
+
+#help (alias #halp)
+  Add a ``HELP`` item to the minutes.  Confusingly, this does *not* give
+  supybot help.  See #commands.
 
 #accepted (alias #accept)
   Mark something as agreed on.  The rest of the line is the details.
+  (Chairs only.)
 
 #rejected (alias #reject)
   Mark something as agreed on.  The rest of the line is the details.
+  (Chairs only.)
 
-#chair and #unchair
-  Add new chairs to the meeting.  The rest of the line is a list of
-  nicks, separated by commas and spaces.  The nick which started the
-  meeting is the ``owner`` and can't be de-chaired.
+#save
+  Write out the logs right now.  (Chairs only.)
+
+#nick
+  Make a nick be recognized by supybot, even though it hasn't said
+  anything.  This is only useful in order to make a list of action
+  items be grouped by this nick at the end of the meeting.
 
 #undo
   Remove the last item from the meeting minutes.  Only applies to
@@ -41,12 +229,13 @@ COMMANDS
 
 #restrictlogs
   When logs are saved, remove the permissions specified in the
-  configuration variable ``RestrictPerm``
+  configuration variable ``RestrictPerm``.  (Chairs only.)
 
 #lurk and #unlurk
   When ``lurk`` is set, MeetBot will only passively listen and take
   notes (and save the notes), not reply or change the topic  This is
   useful for when you don't want disruptions during the meeting.
+  (Chairs only.)
 
 #meetingname
   Provide a friendly name which can be used as a variable in the
@@ -57,46 +246,11 @@ COMMANDS
 
   All spaces are removed from the rest of the line and the string is
   converted to lowercase.  If ``meetingname`` is not provided, it
-  defaults to ``channel``.
-
-#action
-  Add an ``ACTION`` item to the minutes.  Provide irc nicks of people
-  involved, and there will be a listing of action items sorted by nick
-  at the end of the meeting.
-
-#info
-  Add an ``INFO`` item to the minutes.
-
-#idea
-  Add an ``IDEA`` to the minutes.
-
-#help (alias #halp)
-  Add a ``HELP`` item to the minutes.  Confusingly, this does *not* give
-  supybot help.  See #commands.
-
-#nick
-  Make a nick be recognized by supybot, even though it hasn't said
-  anything.  This is only useful in order to make a list of action
-  items be grouped by this nick at the end of the meeting.
-
-#link
-  Add a link to the minutes.  The URL must be the first thing on the
-  line, separated by a space from the rest of the line, and it will be
-  properly hyperlinked.  This is automatically detected if the line
-  starts with http:, https:, mailto:, and some other common protocols
-  defined in the ``UrlProtocols`` configuration variable.
-
-#commands
-  List recognized supybot commands.  This is the better "help" command.
-
-
-LESS-USED COMMANDS
-==================
+  defaults to ``channel``.  (Chairs only.)
 
 
 
-
-ADMIN COMMANDS
+Admin Commands
 ==============
 
 These commands are for the bot owners to.  The expected use is when
@@ -128,8 +282,18 @@ bot.
   first.  The default value of ``save`` is True.
 
 
-CONFIGURATION
+Configuration
 =============
+
+Configuration is done by creating a file ``meetingLocalConfig.py`` in
+the plugin directory, or somewhere in your PYTHONPATH.  The names from
+this file are imported via ``from meetingLocalConfig import *`` and
+can serve to reload.  Only some configuration options are documented
+here, more are documented in the very top of ``meeting.py``.
+
+To reload a configuration, you can just reload the plugin in supybot
+--- the module is reloaded.  Specifically, ``/msg YourBotName reload
+MeetBot``
 
 ::
 
@@ -143,3 +307,11 @@ CONFIGURATION
 ::
 
   MeetBotInfoURL
+
+
+
+
+Help and Support
+================
+
+The channel ``#meetbot`` on irc.oftc.net is the best place to go.
