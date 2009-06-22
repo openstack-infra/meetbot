@@ -494,7 +494,7 @@ class Meeting(MeetingCommands, object):
             pattern = specialChannelFilenamePattern
         else:
             pattern = filenamePattern
-        channel = self.channel.strip('# ')
+        channel = self.channel.strip('# ').lower()
         if self._meetingname:
             meetingname = self._meetingname
         else:
