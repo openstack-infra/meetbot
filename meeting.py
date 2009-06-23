@@ -535,18 +535,38 @@ class Meeting(MeetingCommands, object):
 # These are objects which we can add to the meeting minutes.  Mainly
 # they exist to aid in HTML-formatting.
 #
-class Topic:
+class BaseItem(object):
+    def get_replacements(self):
+        replacements = { }
+        for name in dir(self):
+            if name[0] == "_": continue
+            replacements[name] = getattr(self, name)
+        return replacements
+    def makeRSTref(self, M):
+        rstref = "%s-%s"%(self.nick, self.time)
+        M.rst_urls.append(".. _%s: %s"%(rstref, self.link+"#"+self.anchor))
+        return rstref
+    @property
+    def anchor(self):
+        return 'l-'+str(self.linenum)
+
+class Topic(BaseItem):
     def __init__(self, nick, line, linenum, time_):
         self.nick = nick ; self.topic = line ; self.linenum = linenum
         self.time = time.strftime("%H:%M:%S", time_)
     def html(self, M):
         self.link = os.path.basename(M.logFilename())
         self.topic = html(self.topic)
-        self.anchor = 'l-'+str(self.linenum)
         return """<tr><td><a href='%(link)s#%(anchor)s'>%(time)s</a></td>
         <th colspan=3>Topic: %(topic)s</th>
-        </tr>"""%self.__dict__
-class GenericItem:
+        </tr>"""%self.get_replacements()
+    def rst(self, M):
+        self.link = os.path.basename(M.logFilename())
+        self.topic = html(self.topic)
+        self.rstref = self.makeRSTref(M)
+        return """**%(topic)s**  (`%(rstref)s`_)"""%self.get_replacements()
+
+class GenericItem(BaseItem):
     itemtype = ''
     start = ''
     end = ''
@@ -556,14 +576,15 @@ class GenericItem:
     def html(self, M):
         self.link = os.path.basename(M.logFilename())
         self.line = html(self.line)
-        self.anchor = 'l-'+str(self.linenum)
-        replacements = { }
-        for name in dir(self):
-            if name[0] == "_": continue
-            replacements[name] = getattr(self, name)
         return """<tr><td><a href='%(link)s#%(anchor)s'>%(time)s</a></td>
         <td>%(itemtype)s</td><td>%(nick)s</td><td>%(start)s%(line)s%(end)s</td>
-        </tr>"""%replacements
+        </tr>"""%self.get_replacements()
+    def rst(self, M):
+        self.link = os.path.basename(M.logFilename())
+        self.line = html(self.line)
+        self.rstref = self.makeRSTref(M)
+        return """*%(itemtype)s*: %(line)s  (%(rstref)s_)"""%self.get_replacements()
+
 class Info(GenericItem):
     itemtype = 'INFO'
 class Idea(GenericItem):
@@ -582,7 +603,7 @@ class Rejected(GenericItem):
     itemtype = 'REJECTED'
     start = '<font color="red">'
     end = '</font>'
-class Link:
+class Link(BaseItem):
     itemtype = 'LINK'
     def __init__(self, nick, line, linenum, time_):
         self.nick = nick ; self.linenum = linenum
@@ -595,11 +616,14 @@ class Link:
         self.line = html(self.line.strip())
     def html(self, M):
         self.link = os.path.basename(M.logFilename())
-        self.anchor = 'l-'+str(self.linenum)
-        self.__dict__['itemtype'] = self.itemtype
         return """<tr><td><a href='%(link)s#%(anchor)s'>%(time)s</a></td>
         <td>%(itemtype)s</td><td>%(nick)s</td><td><a href="%(url)s">%(url_readable)s</a> %(line)s</td>
-        </tr>"""%self.__dict__
+        </tr>"""%self.get_replacements()
+    def rst(self, M):
+        self.link = os.path.basename(M.logFilename())
+        self.rstref = self.makeRSTref(M)
+        return """*%(itemtype)s*: %(url)s %(line)s  (%(rstref)s_)"""%self.get_replacements()
+
 
 # None of this is very well refined.
 if __name__ == '__main__':
