@@ -95,13 +95,12 @@ class Config(object):
         # Certain test channels always get the same name - don't need
         # file prolifiration for them
         if self.M.channel in self.specialChannels:
-            # mask global!!
             pattern = self.specialChannelFilenamePattern
         else:
             pattern = self.filenamePattern
-        channel = self.M.channel.strip('# ').lower()
+        channel = self.M.channel.strip('# ').lower().replace('/', '')
         if self.M._meetingname:
-            meetingname = self.M._meetingname
+            meetingname = self.M._meetingname.replace('/', '')
         else:
             meetingname = channel
         path = pattern%locals()
