@@ -118,7 +118,9 @@ class MeetBot(callbacks.Plugin):
             irc.reply(reply)
     listmeetings = wrap(listmeetings, ['admin'])
     def savemeetings(self, irc, msg, args):
-        """Save all currently active meetings."""
+        """
+
+        Save all currently active meetings."""
         numSaved = 0
         for M in meeting_cache:
             M.save()
@@ -152,12 +154,15 @@ class MeetBot(callbacks.Plugin):
             import time
             M.endtime = time.localtime()
             M.save()
+        del meeting_cache[Mkey]
         irc.reply("Deleted: meeting on (%s, %s)."%(channel, network))
     deletemeeting = wrap(deletemeeting, ['admin', "channel", "something",
                                optional("boolean", True)])
 
     def pingall(self, irc, msg, args, message):
-        """Send a broadcast ping to all users on the channel.
+        """<text>
+
+        Send a broadcast ping to all users on the channel.
 
         An message to be sent along with this ping must also be
         supplied for this command to work.
