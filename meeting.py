@@ -71,6 +71,22 @@ class Config(object):
     # Check /usr/share/zoneinfo/ .  Or `man timezone`: this is the contents
     # of the TZ environment variable.
     timeZone = 'UTC'
+    # These are the start and end meeting messages, respectively.
+    # Some replacements are done before they are used, using the
+    # %(name)s syntax.  Note that since one replacement is done below,
+    # you have to use doubled percent signs.  Also, it gets split by
+    # '\n' and each part between newlines get said in a separate IRC
+    # message.
+    startMeetingMessage = ("Meeting started %%(starttime)s %%(timeZone)s.  "
+              "The chair is %%(chair)s. Information about MeetBot at %s.\n"
+              "Useful Commands: #action #agreed #halp #info #idea #link "
+              "#topic.")%MeetBotInfoURL
+    endMeetingMessage = ("Meeting ended %%(endtime)s %%(timeZone)s.  "
+                         "Information about MeetBot at %s .\n"
+                         "Minutes:        %%(urlBasename)s.html\n"
+                         "Minutes (text): %%(urlBasename)s.txt\n"
+                         "Log:            %%(urlBasename)s.log.html")%\
+                         MeetBotInfoURL
 
     input_codec = 'utf-8'
     output_codec = 'utf-8'
@@ -178,11 +194,13 @@ class MeetingCommands(object):
     # Commands for Chairs:
     def do_startmeeting(self, nick, time_, line, **kwargs):
         """Begin a meeting."""
-        self.reply("Meeting started %s %s.  The chair is %s."%\
-                   (time.asctime(time_), Config.timeZone, self.owner))
-        self.reply(("Information about MeetBot at %s , Useful Commands: %s.")%\
-                   (self.config.MeetBotInfoURL, self.config.usefulCommands))
+        starttime = time.asctime(time_)
         self.starttime = time_
+        timeZone = self.config.timeZone
+        chair = self.owner
+        message = self.config.startMeetingMessage%locals()
+        for messageline in message.split('\n'):
+            self.reply(messageline)
         if line.strip():
             self.do_meetingtopic(nick=nick, line=line, time_=time_, **kwargs)
     def do_endmeeting(self, nick, time_, **kwargs):
@@ -192,11 +210,12 @@ class MeetingCommands(object):
             self.topic(self.oldtopic)
         self.endtime = time_
         self.config.save()
-        self.reply("Meeting ended %s %s.  Information about MeetBot at %s ."%\
-                   (time.asctime(time_), self.config.timeZone,
-                    self.config.MeetBotInfoURL))
-        self.reply("Minutes: "+self.config.filename(url=True)+'.html')
-        self.reply("Log:     "+self.config.filename(url=True)+'.log.html')
+        endtime = time.asctime(time_)
+        timeZone = self.config.timeZone
+        urlBasename = self.config.filename(url=True)
+        message = self.config.endMeetingMessage%locals()
+        for messageline in message.split('\n'):
+            self.reply(messageline)
         self._meetingIsOver = True
     def do_topic(self, nick, line, **kwargs):
         """Set a new topic in the channel."""
