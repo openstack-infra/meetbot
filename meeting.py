@@ -36,48 +36,117 @@ import stat
 
 import pygments
 
-#
-# Throw any overrides into meetingLocalConfig.py in this directory:
-#
-# Where to store files on disk
-logFileDir = '/home/richard/meetbot/'
-# The links to the logfiles are given this prefix
-logUrlPrefix = 'http://rkd.zgib.net/meetbot/'
-# Give the pattern to save files into here.  Use %(channel)s for
-# channel.  This will be sent through strftime for substituting it
-# times, howover, for strftime codes you must use doubled percent
-# signs (%%).  This will be joined with the directories above.
-filenamePattern = '%(channel)s/%%Y/%(channel)s.%%F-%%H.%%M'
-# Where to say to go for more information about MeetBot
-MeetBotInfoURL = 'http://wiki.debian.org/MeetBot'
-# This is used with the #restrict command to remove permissions from files.
-RestrictPerm = stat.S_IRWXO|stat.S_IRWXG  # g,o perm zeroed
-# RestrictPerm = stat.S_IRWXU|stat.S_IRWXO|stat.S_IRWXG  # u,g,o perm zeroed.
-# used to detect #link :
-UrlProtocols = ('http:', 'https:', 'irc:', 'ftp:', 'mailto:', 'ssh:')
-# regular expression for parsing commands.  First group is the command name,
-# second group is the rest of the line.
-command_RE = re.compile(r'#([\w]+)[ \t]*(.*)')
-# This is the help printed when a meeting starts
-usefulCommands = "#action #agreed #halp #info #idea #link #topic"
-# The channels which won't have date/time appended to the filename.
-specialChannels = ("#meetbot-test", "#meetbot-test2")
-specialChannelFilenamePattern = '%(channel)s/%(channel)s'
-# HTML irc log highlighting style.  `pygmentize -L styles` to list.
-pygmentizeStyle = 'friendly'
-# Timezone setting.  You can use friendly names like 'US/Eastern', etc.
-# Check /usr/share/zoneinfo/ .  Or `man timezone`: this is the contents
-# of the TZ environment variable.
-timeZone = 'UTC'
 
-def html(text):
-    """Escape bad sequences (in HTML) in user-generated lines."""
-    return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-def enc(text): return text.encode('utf-8', 'replace')
-def dec(text): return text.decode('utf-8', 'replace')
+class Config(object):
+    #
+    # Throw any overrides into meetingLocalConfig.py in this directory:
+    #
+    # Where to store files on disk
+    logFileDir = '/home/richard/meetbot/'
+    # The links to the logfiles are given this prefix
+    logUrlPrefix = 'http://rkd.zgib.net/meetbot/'
+    # Give the pattern to save files into here.  Use %(channel)s for
+    # channel.  This will be sent through strftime for substituting it
+    # times, howover, for strftime codes you must use doubled percent
+    # signs (%%).  This will be joined with the directories above.
+    filenamePattern = '%(channel)s/%%Y/%(channel)s.%%F-%%H.%%M'
+    # Where to say to go for more information about MeetBot
+    MeetBotInfoURL = 'http://wiki.debian.org/MeetBot'
+    # This is used with the #restrict command to remove permissions from files.
+    RestrictPerm = stat.S_IRWXO|stat.S_IRWXG  # g,o perm zeroed
+    # RestrictPerm = stat.S_IRWXU|stat.S_IRWXO|stat.S_IRWXG  #u,g,o perm zeroed
+    # used to detect #link :
+    UrlProtocols = ('http:', 'https:', 'irc:', 'ftp:', 'mailto:', 'ssh:')
+    # regular expression for parsing commands.  First group is the cmd name,
+    # second group is the rest of the line.
+    command_RE = re.compile(r'#([\w]+)[ \t]*(.*)')
+    # This is the help printed when a meeting starts
+    usefulCommands = "#action #agreed #halp #info #idea #link #topic"
+    # The channels which won't have date/time appended to the filename.
+    specialChannels = ("#meetbot-test", "#meetbot-test2")
+    specialChannelFilenamePattern = '%(channel)s/%(channel)s'
+    # HTML irc log highlighting style.  `pygmentize -L styles` to list.
+    pygmentizeStyle = 'friendly'
+    # Timezone setting.  You can use friendly names like 'US/Eastern', etc.
+    # Check /usr/share/zoneinfo/ .  Or `man timezone`: this is the contents
+    # of the TZ environment variable.
+    timeZone = 'UTC'
+
+    input_codec = 'utf-8'
+    output_codec = 'utf-8'
+    def enc(self, text):
+        return text.encode(self.output_codec, 'replace')
+    def dec(self, text):
+        return text.decode(self.input_codec, 'replace')
+
+
+
+    def __init__(self, M):
+        self.M = M
+
+
+    def filename(self, url=False):
+        # provide a way to override the filename.  If it is
+        # overridden, it must be a full path (and the URL-part may not
+        # work.):
+        if getattr(self.M, '_filename', None):
+            return self.M._filename
+        # names useful for pathname formatting.
+        # Certain test channels always get the same name - don't need
+        # file prolifiration for them
+        if self.M.channel in self.specialChannels:
+            # mask global!!
+            pattern = self.specialChannelFilenamePattern
+        else:
+            pattern = self.filenamePattern
+        channel = self.M.channel.strip('# ').lower()
+        if self.M._meetingname:
+            meetingname = self.M._meetingname
+        else:
+            meetingname = channel
+        path = pattern%locals()
+        path = time.strftime(path, self.M.starttime)
+        # If we want the URL name, append URL prefix and return
+        if url:
+            return os.path.join(self.logUrlPrefix, path)
+        path = os.path.join(self.logFileDir, path)
+        # make directory if it doesn't exist...
+        dirname = os.path.dirname(path)
+        if not url and dirname and not os.access(dirname, os.F_OK):
+            os.makedirs(dirname)
+        return path
+    @property
+    def basename(self):
+        return os.path.basename(self.filename())
+
+    def save(self):
+        """Write all output files."""
+        import writers
+
+        writer_map = {
+            '.log.html':writers.HTMLlog(),
+            '.html': writers.HTML(),
+            '.rst': writers.RST(),
+            '.rst.html':writers.HTMLfromRST(),
+            }
+        if self.M._writeRawLog:
+            writer_map['.log.txt'] = writers.TextLog()
+        for extension, writer in writer_map.iteritems():
+            rawname = self.filename()
+            text = writer.format(self.M)
+            f = open(rawname+extension, 'w')
+            if self.M._restrictlogs: self.restrictPermissions(f)
+            print type(text)
+            f.write(self.enc(text))
+            f.close()
+    def restrictPermissions(self, f):
+        """Remove the permissions given in the variable RestrictPerm."""
+        f.flush()
+        newmode = os.stat(f.name).st_mode & (~self.RestrictPerm)
+        os.chmod(f.name, newmode)
 
 # Set the timezone, using the variable above
-os.environ['TZ'] = timeZone
+os.environ['TZ'] = Config.timeZone
 time.tzset()
 
 def parse_time(time_):
@@ -96,7 +165,9 @@ try:
 except ImportError:
     pass
 
-
+import writers ; reload(writers)
+import items   ; reload(items)
+from items import Topic, Info, Idea, Agreed, Action, Halp, Accepted, Rejected, Link
 
 class MeetingCommands(object):
     # Command Definitions
@@ -109,9 +180,9 @@ class MeetingCommands(object):
     def do_startmeeting(self, nick, time_, line, **kwargs):
         """Begin a meeting."""
         self.reply("Meeting started %s %s.  The chair is %s."%\
-                   (time.asctime(time_), timeZone, self.owner))
+                   (time.asctime(time_), Config.timeZone, self.owner))
         self.reply(("Information about MeetBot at %s , Useful Commands: %s.")%\
-                   (MeetBotInfoURL, usefulCommands))
+                   (self.config.MeetBotInfoURL, self.config.usefulCommands))
         self.starttime = time_
         if line.strip():
             self.do_meetingtopic(nick=nick, line=line, time_=time_, **kwargs)
@@ -121,11 +192,12 @@ class MeetingCommands(object):
         if self.oldtopic:
             self.topic(self.oldtopic)
         self.endtime = time_
-        self.save()
+        self.config.save()
         self.reply("Meeting ended %s %s.  Information about MeetBot at %s ."%\
-                   (time.asctime(time_), timeZone, MeetBotInfoURL))
-        self.reply("Minutes: "+self.minutesFilename(url=True))
-        self.reply("Log:     "+self.logFilename(url=True))
+                   (time.asctime(time_), self.config.timeZone,
+                    self.config.MeetBotInfoURL))
+        self.reply("Minutes: "+self.config.filename(url=True)+'.html')
+        self.reply("Log:     "+self.config.filename(url=True)+'.log.html')
         self._meetingIsOver = True
     def do_topic(self, nick, line, **kwargs):
         """Set a new topic in the channel."""
@@ -147,7 +219,7 @@ class MeetingCommands(object):
         """Add a chair to the meeting."""
         if not self.isChair(nick): return
         self.endtime = time_
-        self.save()
+        self.config.save()
     def do_agreed(self, nick, **kwargs):
         """Add aggreement to the minutes - chairs only."""
         if not self.isChair(nick): return
@@ -170,7 +242,7 @@ class MeetingCommands(object):
         """Add a chair to the meeting."""
         if not self.isChair(nick): return
         for chair in re.split('[, ]+', line.strip()):
-            chair = html(chair.strip())
+            chair = chair.strip()
             if not chair: continue
             if chair not in self.chairs:
                 self.addnick(chair, lines=0)
@@ -182,7 +254,7 @@ class MeetingCommands(object):
         """Remove a chair to the meeting (founder can not be removed)."""
         if not self.isChair(nick): return
         for chair in line.strip().split():
-            chair = html(chair.strip())
+            chair = chair.strip()
             if chair in self.chairs:
                 del self.chairs[chair]
         chairs = dict(self.chairs) # make a copy
@@ -213,6 +285,7 @@ class MeetingCommands(object):
 
         If this isn't set, it defaults to the channel name."""
         meetingname = line.strip().lower().replace(" ", "")
+        meetingname = "_".join(line.strip().lower().split())
         self._meetingname = meetingname
         self.reply("The meeting name has been set to '%s'"%meetingname)
     # Commands for Anyone:
@@ -247,7 +320,7 @@ class MeetingCommands(object):
         for nick in nicks:
             nick = nick.strip()
             if not nick: continue
-            self.addnick(html(nick), lines=0)
+            self.addnick(nick, lines=0)
     def do_link(self, **kwargs):
         """Add informational item to the minutes."""
         m = Link(**kwargs)
@@ -266,6 +339,7 @@ class Meeting(MeetingCommands, object):
     _restrictlogs = False
     def __init__(self, channel, owner, oldtopic=None,
                  filename=None, writeRawLog=False):
+        self.config = Config(self)
         self.owner = owner
         self.channel = channel
         self.currenttopic = ""
@@ -286,15 +360,15 @@ class Meeting(MeetingCommands, object):
     def reply(self, x):
         """Send a reply to the IRC channel."""
         if hasattr(self, '_sendReply') and not self._lurk:
-            self._sendReply(x)
+            self._sendReply(self.config.enc(x))
         else:
-            print "REPLY:", enc(x)
+            print "REPLY:", self.config.enc(x)
     def topic(self, x):
         """Set the topic in the IRC channel."""
         if hasattr(self, '_setTopic') and not self._lurk:
-            self._setTopic(x)
+            self._setTopic(self.config.enc(x))
         else:
-            print "TOPIC:", enc(x)
+            print "TOPIC:", self.config.enc(x)
     def settopic(self):
         "The actual code to set the topic"
         if self._meetingTopic:
@@ -309,15 +383,16 @@ class Meeting(MeetingCommands, object):
     def isChair(self, nick):
         """Is the nick a chair?"""
         return (nick == self.owner  or  nick in self.chairs)
+    def save(self):
+        self.config.save()
     # Primary enttry point for new lines in the log:
     def addline(self, nick, line, time_=None):
         """This is the way to add lines to the Meeting object.
         """
-        nick = html(nick)
+        nick = self.config.dec(nick)
+        line = self.config.dec(line)
         self.addnick(nick)
         line = line.strip(' \x01') # \x01 is present in ACTIONs
-        nick = dec(nick)
-        line = dec(line)
         # Setting a custom time is useful when replying logs,
         # otherwise use our current time:
         if time_ is None: time_ = time.localtime()
@@ -333,7 +408,7 @@ class Meeting(MeetingCommands, object):
         linenum = len(self.lines)
 
         # Handle any commands given in the line.
-        matchobj = command_RE.match(line)
+        matchobj = self.config.command_RE.match(line)
         if matchobj is not None:
             command, line = matchobj.groups()
             command = command.lower()
@@ -343,286 +418,9 @@ class Meeting(MeetingCommands, object):
                                              linenum=linenum, time_=time_)
         else:
             # Detect URLs automatically
-            if line.split('//')[0] in UrlProtocols:
+            if line.split('//')[0] in self.config.UrlProtocols:
                 self.do_link(nick=nick, line=line,
                              linenum=linenum, time_=time_)
-
-        
-    def save(self):
-        """Write all output files."""
-        if self._writeRawLog:
-            self.writeRawLog()
-        self.writeLogs()
-        self.writeMinutes()
-    def writeLogs(self):
-        """Write pretty HTML logs."""
-        # pygments lexing setup:
-        # (pygments HTML-formatter handles HTML-escaping)
-        from pygments.lexers import IrcLogsLexer
-        from pygments.formatters import HtmlFormatter
-        import pygments.token as token
-        from pygments.lexer import bygroups
-        formatter = HtmlFormatter(encoding='utf-8', lineanchors='l',
-                                  full=True, style=pygmentizeStyle)
-        Lexer = IrcLogsLexer
-        Lexer.tokens['msg'][1:1] = \
-           [ # match:   #topic commands
-            (r"(\#topic[ \t\f\v]*)(.*\n)",
-             bygroups(token.Keyword, token.Generic.Heading), '#pop'),
-             # match:   #command   (others)
-            (r"(\#[^\s]+[ \t\f\v]*)(.*\n)",
-             bygroups(token.Keyword, token.Generic.Strong), '#pop'),
-           ]
-        lexer = Lexer(encoding='utf-8')
-        #from rkddp.interact import interact ; interact()
-        out = pygments.highlight("\n".join(self.lines), lexer, formatter)
-        # Do the writing...
-        f = file(self.logFilename(), 'w')
-        # We might want to restrict read-permissions of the files from
-        # the webserver.
-        if self._restrictlogs:
-            self.restrictPermissions(f)
-        f.write(out)
-    def writeMinutes(self):
-        """Write the minutes summary."""
-        f = file(self.minutesFilename(), 'w')
-        data = [ ]
-        # We might want to restrict read-permissions of the files from
-        # the webserver.
-        if self._restrictlogs:
-            self.restrictPermissions(f)
-
-        if self._meetingTopic:
-            pageTitle = "%s: %s"%(self.channel, self._meetingTopic)
-        else:
-            pageTitle = "%s Meeting"%self.channel
-        # Header and things stored
-        data.append(
-        '''<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-        <html>
-        <head>
-        <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
-        <title>%s</title>
-        </head>
-        <body>
-        <h1>%s</h1>
-        Meeting started by %s at %s %s.  (<a href="%s">full logs</a>)<br>
-        \n\n<table border=1>'''%(pageTitle, pageTitle, self.owner,
-                             time.strftime("%H:%M:%S", self.starttime),
-                             timeZone,
-                             os.path.basename(self.logFilename())))
-        # Add all minute items to the table
-        for m in self.minutes:
-            data.append(m.html(self))
-        # End the log portion
-        data.append("""</table>
-        Meeting ended at %s %s.  (<a href="%s">full logs</a>)"""%\
-            (time.strftime("%H:%M:%S", self.endtime), timeZone,
-             os.path.basename(self.logFilename())))
-        data.append("\n<br><br><br>")
-
-
-        # Action Items
-        data.append("<b>Action Items</b><ol>")
-        import meeting
-        for m in self.minutes:
-            # The hack below is needed because of pickling problems
-            if not isinstance(m, (Action, meeting.Action)): continue
-            data.append("  <li>%s</li>"%m.line) #already escaped
-        data.append("</ol>\n\n<br>")
-        
-
-        # Action Items, by person (This could be made lots more efficient)
-        data.append("<b>Action Items, by person</b>\n<ol>")
-        for nick in sorted(self.attendees.keys(), key=lambda x: x.lower()):
-            headerPrinted = False
-            for m in self.minutes:
-                # The hack below is needed because of pickling problems
-                if not isinstance(m, (Action, meeting.Action)): continue
-                if m.line.find(nick) == -1: continue
-                if not headerPrinted:
-                    data.append("  <li> %s <ol>"%nick)
-                    headerPrinted = True
-                data.append("    <li>%s</li>"%m.line) # already escaped
-                m.assigned = True
-            if headerPrinted:
-                data.append("  </ol></li>")
-        # unassigned items:
-        data.append("  <li><b>UNASSIGNED</b><ol>")
-        numberUnassigned = 0
-        for m in self.minutes:
-            if not isinstance(m, (Action, meeting.Action)): continue
-            if getattr(m, 'assigned', False): continue
-            data.append("    <li>%s</li>"%m.line) # already escaped
-            numberUnassigned += 1
-        if numberUnassigned == 0: data.append("    <li>(none)</li>")
-        data.append('  </ol>\n</li>')
-        # clean-up
-        data.append("</ol>\n\n<br>")
-
-
-        # People Attending
-        data.append("""<b>People Present (lines said):</b><ol>""")
-        # sort by number of lines spoken
-        nicks = [ (n,c) for (n,c) in self.attendees.iteritems() ]
-        nicks.sort(key=lambda x: x[1], reverse=True)
-        for nick in nicks:
-            data.append('  <li>%s (%s)</li>'%(nick[0], nick[1]))
-        data.append("</ol>\n\n<br>")
-        data.append("""Generated by <a href="%s">MeetBot</a>."""%
-                                                             MeetBotInfoURL)
-        data.append("</body></html>")
-
-        f.write(enc("\n".join(data)))
-    def writeRawLog(self):
-        """Write raw text logs."""
-        f = file(self.logFilename(raw=True), 'w')
-        if self._restrictlogs:
-            self.restrictPermissions(f)
-        f.write(enc("\n".join(self.lines)))
-    def filename(self, url=False):
-        # provide a way to override the filename.  If it is
-        # overridden, it must be a full path (and the URL-part may not
-        # work.):
-        if getattr(self, '_filename', None):
-            return self._filename
-        # names useful for pathname formatting.
-        # Certain test channels always get the same name - don't need
-        # file prolifiration for them
-        if self.channel in specialChannels:
-            # mask global!!
-            pattern = specialChannelFilenamePattern
-        else:
-            pattern = filenamePattern
-        channel = self.channel.strip('# ').lower()
-        if self._meetingname:
-            meetingname = self._meetingname
-        else:
-            meetingname = channel
-        path = pattern%locals()
-        path = time.strftime(path, self.starttime)
-        # If we want the URL name, append URL prefix and return
-        if url:
-            return os.path.join(logUrlPrefix, path)
-        path = os.path.join(logFileDir, path)
-        return path
-    def logFilename(self, url=False, raw=False):
-        """Name of the meeting logfile"""
-        extension = '.log.html'
-        if raw:
-            extension = '.log.txt'
-        fname = self.filename(url=url)+extension
-        dirname = os.path.dirname(fname)
-        if not url and dirname and not os.access(dirname, os.F_OK):
-            os.makedirs(dirname)
-        return fname
-    def minutesFilename(self, url=False):
-        """Name of the meeting minutes file"""
-        fname = self.filename(url=url)+'.html'
-        dirname = os.path.dirname(fname)
-        if not url and dirname and not os.access(dirname, os.F_OK):
-            os.makedirs(dirname)
-        return fname
-    def restrictPermissions(self, f):
-        """Remove the permissions given in the variable RestrictPerm."""
-        f.flush()
-        newmode = os.stat(f.name).st_mode & (~RestrictPerm)
-        os.chmod(f.name, newmode)
-        
-
-
-#
-# These are objects which we can add to the meeting minutes.  Mainly
-# they exist to aid in HTML-formatting.
-#
-class BaseItem(object):
-    def get_replacements(self):
-        replacements = { }
-        for name in dir(self):
-            if name[0] == "_": continue
-            replacements[name] = getattr(self, name)
-        return replacements
-    def makeRSTref(self, M):
-        rstref = "%s-%s"%(self.nick, self.time)
-        M.rst_urls.append(".. _%s: %s"%(rstref, self.link+"#"+self.anchor))
-        return rstref
-    @property
-    def anchor(self):
-        return 'l-'+str(self.linenum)
-
-class Topic(BaseItem):
-    def __init__(self, nick, line, linenum, time_):
-        self.nick = nick ; self.topic = line ; self.linenum = linenum
-        self.time = time.strftime("%H:%M:%S", time_)
-    def html(self, M):
-        self.link = os.path.basename(M.logFilename())
-        self.topic = html(self.topic)
-        return """<tr><td><a href='%(link)s#%(anchor)s'>%(time)s</a></td>
-        <th colspan=3>Topic: %(topic)s</th>
-        </tr>"""%self.get_replacements()
-    def rst(self, M):
-        self.link = os.path.basename(M.logFilename())
-        self.topic = html(self.topic)
-        self.rstref = self.makeRSTref(M)
-        return """**%(topic)s**  (`%(rstref)s`_)"""%self.get_replacements()
-
-class GenericItem(BaseItem):
-    itemtype = ''
-    start = ''
-    end = ''
-    def __init__(self, nick, line, linenum, time_):
-        self.nick = nick ; self.line = line ; self.linenum = linenum
-        self.time = time.strftime("%H:%M:%S", time_)
-    def html(self, M):
-        self.link = os.path.basename(M.logFilename())
-        self.line = html(self.line)
-        return """<tr><td><a href='%(link)s#%(anchor)s'>%(time)s</a></td>
-        <td>%(itemtype)s</td><td>%(nick)s</td><td>%(start)s%(line)s%(end)s</td>
-        </tr>"""%self.get_replacements()
-    def rst(self, M):
-        self.link = os.path.basename(M.logFilename())
-        self.line = html(self.line)
-        self.rstref = self.makeRSTref(M)
-        return """*%(itemtype)s*: %(line)s  (%(rstref)s_)"""%self.get_replacements()
-
-class Info(GenericItem):
-    itemtype = 'INFO'
-class Idea(GenericItem):
-    itemtype = 'IDEA'
-class Agreed(GenericItem):
-    itemtype = 'AGREED'
-class Action(GenericItem):
-    itemtype = 'ACTION'
-class Halp(GenericItem):
-    itemtype = 'HALP'
-class Accepted(GenericItem):
-    itemtype = 'ACCEPTED'
-    start = '<font color="green">'
-    end = '</font>'
-class Rejected(GenericItem):
-    itemtype = 'REJECTED'
-    start = '<font color="red">'
-    end = '</font>'
-class Link(BaseItem):
-    itemtype = 'LINK'
-    def __init__(self, nick, line, linenum, time_):
-        self.nick = nick ; self.linenum = linenum
-        self.time = time.strftime("%H:%M:%S", time_)
-        self.url, self.line = (line+' ').split(' ', 1)
-        # URL-sanitization
-        self.url_readable = html(self.url) # readable line version
-        self.url = self.url.replace('"', "%22")
-        # readable line satitization:
-        self.line = html(self.line.strip())
-    def html(self, M):
-        self.link = os.path.basename(M.logFilename())
-        return """<tr><td><a href='%(link)s#%(anchor)s'>%(time)s</a></td>
-        <td>%(itemtype)s</td><td>%(nick)s</td><td><a href="%(url)s">%(url_readable)s</a> %(line)s</td>
-        </tr>"""%self.get_replacements()
-    def rst(self, M):
-        self.link = os.path.basename(M.logFilename())
-        self.rstref = self.makeRSTref(M)
-        return """*%(itemtype)s*: %(url)s %(line)s  (%(rstref)s_)"""%self.get_replacements()
 
 
 # None of this is very well refined.
