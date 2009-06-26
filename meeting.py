@@ -36,6 +36,10 @@ import stat
 
 import pygments
 
+import writers ; reload(writers)
+import items   ; reload(items)
+from items import Topic, Info, Idea, Agreed, Action, Halp, Accepted, Rejected, Link
+
 
 class Config(object):
     #
@@ -129,19 +133,17 @@ class Config(object):
     def basename(self):
         return os.path.basename(self.filename())
 
+    writer_map = {
+        '.log.html':writers.HTMLlog(),
+        '.html': writers.HTML(),
+        '.txt': writers.RST(),
+        #'.rst.html':writers.HTMLfromRST(),
+        }
     def save(self):
         """Write all output files."""
-        import writers
-
-        writer_map = {
-            '.log.html':writers.HTMLlog(),
-            '.html': writers.HTML(),
-            '.rst': writers.RST(),
-            '.rst.html':writers.HTMLfromRST(),
-            }
         if self.M._writeRawLog:
-            writer_map['.log.txt'] = writers.TextLog()
-        for extension, writer in writer_map.iteritems():
+            self.writer_map['.log.txt'] = writers.TextLog()
+        for extension, writer in self.writer_map.iteritems():
             rawname = self.filename()
             text = writer.format(self.M)
             f = open(rawname+extension, 'w')
@@ -154,22 +156,11 @@ class Config(object):
         newmode = os.stat(f.name).st_mode & (~self.RestrictPerm)
         os.chmod(f.name, newmode)
 
+
+
 # Set the timezone, using the variable above
 os.environ['TZ'] = Config.timeZone
 time.tzset()
-
-def parse_time(time_):
-    try: return time.strptime(time_, "%H:%M:%S")
-    except ValueError: pass
-    try: return time.strptime(time_, "%H:%M")
-    except ValueError: pass
-logline_re = re.compile(r'\[?([0-9: ]*)\]? *<[@+]?([^>]+)> *(.*)')
-loglineAction_re = re.compile(r'\[?([0-9: ]*)\]? *\* *([^ ]+) *(.*)')
-
-
-import writers ; reload(writers)
-import items   ; reload(items)
-from items import Topic, Info, Idea, Agreed, Action, Halp, Accepted, Rejected, Link
 
 # load custom local configurations
 try:
@@ -179,6 +170,8 @@ try:
         Config = type('Config', (meetingLocalConfig.Config, Config), {})
 except ImportError:
     pass
+
+
 
 class MeetingCommands(object):
     # Command Definitions
@@ -348,8 +341,6 @@ class MeetingCommands(object):
             
 
 
-
-
 class Meeting(MeetingCommands, object):
     _lurk = False
     _restrictlogs = False
@@ -437,6 +428,18 @@ class Meeting(MeetingCommands, object):
             if line.split('//')[0] in self.config.UrlProtocols:
                 self.do_link(nick=nick, line=line,
                              linenum=linenum, time_=time_)
+
+
+
+
+def parse_time(time_):
+    try: return time.strptime(time_, "%H:%M:%S")
+    except ValueError: pass
+    try: return time.strptime(time_, "%H:%M")
+    except ValueError: pass
+logline_re = re.compile(r'\[?([0-9: ]*)\]? *<[@+]?([^>]+)> *(.*)')
+loglineAction_re = re.compile(r'\[?([0-9: ]*)\]? *\* *([^ ]+) *(.*)')
+
 
 
 # None of this is very well refined.
