@@ -77,16 +77,16 @@ class Config(object):
     # you have to use doubled percent signs.  Also, it gets split by
     # '\n' and each part between newlines get said in a separate IRC
     # message.
-    startMeetingMessage = ("Meeting started %%(starttime)s %%(timeZone)s.  "
-              "The chair is %%(chair)s. Information about MeetBot at %s.\n"
+    startMeetingMessage = ("Meeting started %(starttime)s %(timeZone)s.  "
+              "The chair is %(chair)s. Information about MeetBot at "
+              "%(MeetBotInfoURL)s.\n"
               "Useful Commands: #action #agreed #halp #info #idea #link "
-              "#topic.")%MeetBotInfoURL
-    endMeetingMessage = ("Meeting ended %%(endtime)s %%(timeZone)s.  "
-                         "Information about MeetBot at %s .\n"
-                         "Minutes:        %%(urlBasename)s.html\n"
-                         "Minutes (text): %%(urlBasename)s.txt\n"
-                         "Log:            %%(urlBasename)s.log.html")%\
-                         MeetBotInfoURL
+              "#topic.")
+    endMeetingMessage = ("Meeting ended %(endtime)s %(timeZone)s.  "
+                         "Information about MeetBot at %(MeetBotInfoURL)s .\n"
+                         "Minutes:        %(urlBasename)s.html\n"
+                         "Minutes (text): %(urlBasename)s.txt\n"
+                         "Log:            %(urlBasename)s.log.html")
     input_codec = 'utf-8'
     output_codec = 'utf-8'
     def enc(self, text):
@@ -195,6 +195,7 @@ class MeetingCommands(object):
         self.starttime = time_
         timeZone = self.config.timeZone
         chair = self.owner
+        MeetBotInfoURL = self.config.MeetBotInfoURL
         message = self.config.startMeetingMessage%locals()
         for messageline in message.split('\n'):
             self.reply(messageline)
@@ -210,6 +211,7 @@ class MeetingCommands(object):
         endtime = time.asctime(time_)
         timeZone = self.config.timeZone
         urlBasename = self.config.filename(url=True)
+        MeetBotInfoURL = self.config.MeetBotInfoURL
         message = self.config.endMeetingMessage%locals()
         for messageline in message.split('\n'):
             self.reply(messageline)
