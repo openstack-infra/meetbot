@@ -87,7 +87,6 @@ class Config(object):
                          "Minutes (text): %%(urlBasename)s.txt\n"
                          "Log:            %%(urlBasename)s.log.html")%\
                          MeetBotInfoURL
-
     input_codec = 'utf-8'
     output_codec = 'utf-8'
     def enc(self, text):
@@ -95,12 +94,8 @@ class Config(object):
     def dec(self, text):
         return text.decode(self.input_codec, 'replace')
 
-
-
     def __init__(self, M):
         self.M = M
-
-
     def filename(self, url=False):
         # provide a way to override the filename.  If it is
         # overridden, it must be a full path (and the URL-part may not
@@ -172,17 +167,19 @@ def parse_time(time_):
 logline_re = re.compile(r'\[?([0-9: ]*)\]? *<[@+]?([^>]+)> *(.*)')
 loglineAction_re = re.compile(r'\[?([0-9: ]*)\]? *\* *([^ ]+) *(.*)')
 
-# load custom local configurations
-try:
-    import meetingLocalConfig
-    meetingLocalConfig = reload(meetingLocalConfig)
-    from meetingLocalConfig import *
-except ImportError:
-    pass
 
 import writers ; reload(writers)
 import items   ; reload(items)
 from items import Topic, Info, Idea, Agreed, Action, Halp, Accepted, Rejected, Link
+
+# load custom local configurations
+try:
+    import meetingLocalConfig
+    meetingLocalConfig = reload(meetingLocalConfig)
+    if hasattr(meetingLocalConfig, 'Config'):
+        Config = type('Config', (meetingLocalConfig.Config, Config), {})
+except ImportError:
+    pass
 
 class MeetingCommands(object):
     # Command Definitions

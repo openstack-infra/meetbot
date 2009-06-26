@@ -286,27 +286,30 @@ Configuration
 =============
 
 Configuration is done by creating a file ``meetingLocalConfig.py`` in
-the plugin directory, or somewhere in your PYTHONPATH.  The names from
-this file are imported via ``from meetingLocalConfig import *`` and
-can serve to reload.  Only some configuration options are documented
-here, more are documented in the very top of ``meeting.py``.
+the plugin directory, or somewhere in your PYTHONPATH.  It works by
+(automatically) subclassing the Config class.  Here is an example,
+basic usage::
+
+    Class Config(object):
+        logFileDir = '/home/richard/meetbot/'
+        logUrlPrefix = 'http://rkd.zgib.net/meetbot/'
+        
+        filenamePattern = '%(channel)s/%%Y/%(channel)s.%%F-%%H.%%M'
+        
+        MeetBotInfoURL = 'http://some_other_side.tld'
+        
+Only some configuration options are documented here, more are
+documented in the very top of ``meeting.py``.  Note that you don't
+subclass anything yourself, that happens automatically.
+
+Since this is a proper module execution and subclass, you can do some
+crazy things like add a new meeting command or meeting agenda item
+type.
 
 To reload a configuration, you can just reload the plugin in supybot
 --- the module is reloaded.  Specifically, ``/msg YourBotName reload
 MeetBot``
 
-::
-
-  logFileDir = '/home/richard/meetbot/'
-  logUrlPrefix = 'http://rkd.zgib.net/meetbot/'
-
-::
-
-  filenamePattern = '%(channel)s/%%Y/%(channel)s.%%F-%%H.%%M'
-
-::
-
-  MeetBotInfoURL
 
 
 
