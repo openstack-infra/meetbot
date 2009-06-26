@@ -38,6 +38,8 @@ import supybot.ircmsgs as ircmsgs
 import time
 import meeting
 meeting = reload(meeting)
+import supybotconfig
+supybotconfig = reload(supybotconfig)
 
 # By doing this, we can not lose all of our meetings across plugin
 # reloads.  But, of course, you can't change the source too
@@ -97,6 +99,8 @@ class MeetBot(callbacks.Plugin):
                 irc.sendMsg(ircmsgs.privmsg(channel, x))
             M._setTopic = _setTopic
             M._sendReply = _sendReply
+            # callback  to get supybot registry values.
+            M._registryValue = self.registryValue
         # If there is no meeting going on, then we quit
         if M is None: return
         # Add line to our meeting buffer.
