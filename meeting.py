@@ -146,7 +146,6 @@ class Config(object):
             text = writer.format(self.M)
             f = open(rawname+extension, 'w')
             if self.M._restrictlogs: self.restrictPermissions(f)
-            print type(text)
             f.write(self.enc(text))
             f.close()
     def restrictPermissions(self, f):
