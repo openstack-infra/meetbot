@@ -250,19 +250,20 @@ Less-used Commands
 
 
 
-Admin Commands
-==============
+Supybot Admin Commands
+======================
 
-These commands are for the bot owners to.  The expected use is when
-the bot is on many channels as a public service, and the bot owner
-sometimes needs to be able to monitor and adjust the overall
-situation.
+These commands are for the bot owners to manage all meetings served by
+their bot.  The expected use of these commands is when the bot is on
+many channels as a public service, and the bot owner sometimes needs
+to be able to monitor and adjust the overall situation, even if she is
+not the chair of a meeting.
 
 All of these are regular supybot commands (as opposed to the commands
 above).  That means that the supybot capability system applies, and
 they can be given either in any channel, either by direct address
 (``BotName: <command> <args> ...``) or with the bot prefix character
-(``@<commandname> <args> ...``).
+(e.g. ``@<commandname> <args> ...``).
 
 These are restricted to anyone with the ``admin`` capability on the
 bot.
@@ -282,13 +283,32 @@ bot.
   first.  The default value of ``save`` is True.
 
 
+
+Hints on how to run an effective meeting
+========================================
+
+*Please contribute to this section!*
+
+ * Have an agenda.  Think about the agenda beforehand, so that
+   attendees are not tempted to jump ahead and discuss future items.
+   This will make it very hard to follow.
+ * Don't be afraid to tell attendees to wait for a future topic to
+   discuss something.
+ * Sometimes one chair to manage the topic at hand, and one chair to
+   manage all people who are going off-topic, can help.
+ * Delegate where possible and have those interested discuss the
+   details after the meeting, where applicable.
+
+
+
+
 Configuration
 =============
 
 Configuration is done by creating a file ``meetingLocalConfig.py`` in
 the plugin directory, or somewhere in your PYTHONPATH.  It works by
-(automatically) subclassing the Config class.  Here is an example,
-basic usage::
+(automatically) subclassing the Config class.  Here is a basic usuage
+example (put this in ``meetingLocalConfig.py``)::
 
     Class Config(object):
         logFileDir = '/home/richard/meetbot/'
@@ -310,6 +330,164 @@ To reload a configuration, you can just reload the plugin in supybot
 --- the module is reloaded.  Specifically, ``/msg YourBotName reload
 MeetBot``
 
+
+
+Supybot-based Config
+--------------------
+
+There is a mode where the supybot registry system can be used to set
+the values of some configuration variables.  To enable this system,
+first it must be enabled in the supybot config system, then the
+MeetBot plugin must be reloaded::
+
+    /msg YourBot config supybot.plugins.MeetBot enableSupybotBasedConfig True
+    /msg YourBot reload MeetBot
+
+List the values available for configuration (this list may not be up
+to date)::
+
+    /msg YourBot config list supybot.plugins.MeetBot
+    ----> #endMeetingMessage, #filenamePattern, #input_codec,
+          #logFileDir, #logUrlPrefix, #MeetBotInfoURL, #output_codec,
+          #pygmentizeStyle, #specialChannelFilenamePattern,
+          #startMeetingMessage, #timeZone, #usefulCommands, 
+          enableSupybotBasedConfig, and public
+
+Setting a value::
+
+    /msg YourBot config supybot.plugins.MeetBot.logUrlPrefix ...
+    ... http://meetings.yoursite.net/
+
+
+At present, not all possible variables are exported to supybot.  All
+string variables are, as well certain other variables for which a
+parser has been written.  If a variable doesn't appear in the supybot
+registry, it can't be set there.
+
+If you want to disable supybot-based config for security reasons, set
+``dontBotConfig`` to True in your custom configuration class in
+``meetingLocalConfig.py``.
+
+
+
+Required or Important Configuration
+-----------------------------------
+
+``logFileDir``
+    The filesystem directory in which the meeting outputs are stored.
+
+``logUrlPrefix``
+    The URL corresponding to ``logFileDir``.  This is prepended to
+    filenames when giving end-of-meeting links in the channel.
+
+``filenamePattern``
+    This defaults to ``'%(channel)s/%%Y/%(channel)s.%%F-%%H.%%M'``,
+    and is the pattern used for replacements to identify the name of
+    the file basename (including possible sub-directories) in which to
+    store the meeting output files.  This is the suffix to
+    ``logFileDir`` and ``logUrlPrefix``.
+
+    Variables available for replacement using ``%(name)s`` include:
+    ``channel``, ``meetingname``.  Double percent signs (e.g.: ``%%Y``
+    are time formats, from ``time.strftime``.
+
+    This filename does *not* include extensions.  Those are found from
+    the writers, via the variable ``writer_map``.
+
+    Putting these all together, a set of variables could be:
+      1) ``logFileDir  =  /srv/www/meetings/``
+      2) ``%(channel)s/%%Y/%(channel)s.%%F-%%H.%%M``
+      3) (extensions come from ``writers_map``)
+
+``MeetBotInfoURL``
+    This is a URL given in beginning and ending messages and minutes
+    files as a "go here for more information" link.
+
+
+
+Other Config Variables
+----------------------
+
+``usefulCommands``
+    This is a list (Defaulting to "``#action #agreed #halp #info #idea
+    #link #topic``" which is presented at the start of the meetings to
+    remind attendees of how to use meetbot.
+
+``RestrictPerm``
+    An int listing which permissions to remove when using the
+    ``#restrictlogs`` command.  It is best to use the python ``stat``
+    module to set it::
+
+        RestrictPerm = stat.S_IRWXO|stat.S_IRWXG
+
+``specialChannels`` and ``specialChannelFilenamePattern``
+    When you are doing MeetBot testing, you would rather not have
+    nonstop different filenames each time you do a test meeting.
+    If a channel is in ``specialChannels``, it will use
+    ``specialChannelFilenamePattern`` instead of ``filenamePattern``
+    when storing logs.  ``specialChannels`` is a tuple listing channel
+    names.  Example: the defaults are ``("#meetbot-test",
+    "#meetbot-test2")`` and ``'%(channel)s/%(channel)s'`` (note that
+    there is no time-dependence in the name).
+
+``UrlProtocols``
+    Tuple of protocols to use to automatically detect link.  Example:
+    the default tuple is ``('http:', 'https:', 'irc:', 'ftp:',
+    'mailto:', 'ssh:')``.
+
+``command_RE``
+    How commands are detected.  See code.
+
+``pygmentizeStyle``
+    Style for the Pygments module to use to colorize the IRC logs.
+    The default is ``"friendly"``.
+
+``timeZone``
+    Timezone used in the bot.  Note: This will not yet work on a
+    per-channel basis.  The default is ``"UTC"``
+
+``startMeetingMessage``
+
+``endMeetingMessage``
+    Message printed at the beginning/end of the meetings.  Some
+    ``%(name)s`` replacements are available: ``chair``, ``starttime``,
+    ``timeZone``, ``endtime``, ``MeetBotInfoURL``, ``urlBasename``.
+
+``input_codec``
+
+``output_codec``
+    Input and output character set encodings.
+
+``writer_map``
+    A python dictionary listing what output formats will be used to
+    write our final results to a file, along with extensions to use.
+    For example::
+
+        writer_map = {
+            '.log.html':writers.HTMLlog(),
+            '.html': writers.HTML(),
+            '.txt': writers.RST(),
+            #'.rst.html':writers.HTMLfromRST(),
+            }
+
+
+
+Advanced Configuration
+----------------------
+
+Adding a new custom command via ``meetingLocalConfig.py``.  This
+likely won't make sense unless you examine the code a bit::
+
+    class Config(object):
+        def __init__(self, channel):
+            # We need to do the other default configuration first
+            super(Config, self).__init__(channel)
+            def do_party(self, nick, time_, **kwargs):
+                self.reply("We're having a party in this code!")
+                self.reply(("Owner, Chairs: %s %s"%(
+                                     self.owner,sorted(self.chairs.keys()))))
+            self.M.do_party = types.UnboundMethodType(
+                                           do_party, self.M, self.M.__class__)
 
 
 
