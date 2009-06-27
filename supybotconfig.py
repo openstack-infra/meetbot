@@ -20,8 +20,7 @@ class SupybotConfig(object):
         """
         if attrname in settable_attributes:
             value = self.__C.M._registryValue(attrname,
-                                              #channel=self.__C.M.channel
-                                              )
+                                              channel=self.__C.M.channel)
             if value != '.':
                 value = value.replace('\\n', '\n')
                 return value
@@ -61,9 +60,10 @@ if (use_supybot_config.value and
         if not isinstance(attr, (str, unicode)):
             continue
         attr = attr.replace('\n', '\\n')
-        # Use this instead: conf.registerChannelValue
-        conf.registerGlobalValue(MeetBotConfigGroup, attrname,
-                                 registry.String(attr,""))
+        # For a global value: conf.registerGlobalValue and remove the
+        # channel= option from registryValue call above.
+        conf.registerChannelValue(MeetBotConfigGroup, attrname,
+                                  registry.String(attr,""))
         settable_attributes.append(attrname)
 
     # Here is where the real proxying occurs.
