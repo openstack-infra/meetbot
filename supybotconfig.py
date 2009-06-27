@@ -8,6 +8,7 @@ import writers
 
 OriginalConfig = meeting.Config
 
+
 # The plugin group for configuration
 MeetBotConfigGroup = conf.registerPlugin('MeetBot')
 
@@ -43,7 +44,7 @@ class WriterMap(registry.String):
         return " ".join(writers_string)
 
 
-class SupybotConfig(object):
+class SupybotConfigProxy(object):
     def __init__(self, M):
         """Do the regular default configuration, and sta"""
         self.__C = OriginalConfig(M)
@@ -65,16 +66,6 @@ class SupybotConfig(object):
         # functions take.
         return getattr(self.__C, attrname)
 
-    #def __getattribute__(self, attrname):
-    #    print attrname
-    #
-    #    from fitz import interact ; interact.interact()
-    #    if attrname in settable_attributes:
-    #        "getting from registry"
-    #        #self.registryValue('enable', channel)
-    #        return "blah blah blah"
-    #    
-    #    raise AttributeError
 
 
 #conf.registerGlobalValue(MeetBot
@@ -111,6 +102,6 @@ if (use_supybot_config.value and
 
 
     # Here is where the real proxying occurs.
-    meeting.Config = SupybotConfig
-    meeting.ConfigOriginal = OriginalConfig
-    #meeting.Config = type('Config', (Config, meeting.Config), {})
+    meeting.Config = SupybotConfigProxy
+
+
