@@ -37,8 +37,9 @@ import supybot.ircmsgs as ircmsgs
 
 import time
 import meeting
-meeting = reload(meeting)
 import supybotconfig
+# Because of the way we override names, we need to reload these in order.
+meeting = reload(meeting)
 supybotconfig = reload(supybotconfig)
 
 # By doing this, we can not lose all of our meetings across plugin
