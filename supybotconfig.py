@@ -1,5 +1,7 @@
 # Richard Darst, June 2009
 
+import types
+
 import supybot.conf as conf
 import supybot.registry as registry
 
@@ -94,8 +96,10 @@ if (use_supybot_config.value and
         settable_attributes.append(attrname)
 
     # writer_map
-    if 'writer_map' in MeetBotConfigGroup._children:
-        MeetBotConfigGroup.unregister('writer_map')
+    # (doing the commented out commands below will erase the previously
+    # stored value of a config variable)
+    #if 'writer_map' in MeetBotConfigGroup._children:
+    #    MeetBotConfigGroup.unregister('writer_map')
     conf.registerChannelValue(MeetBotConfigGroup, 'writer_map',
                       WriterMap(OriginalConfig.writer_map, ""))
     settable_attributes.append('writer_map')
