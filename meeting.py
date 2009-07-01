@@ -38,7 +38,6 @@ import pygments
 
 import writers ; reload(writers)
 import items   ; reload(items)
-from items import Topic, Info, Idea, Agreed, Action, Halp, Accepted, Rejected, Link
 
 
 class Config(object):
@@ -212,7 +211,7 @@ class MeetingCommands(object):
         """Set a new topic in the channel."""
         if not self.isChair(nick): return
         self.currenttopic = line
-        m = Topic(nick=nick, line=line, **kwargs)
+        m = items.Topic(nick=nick, line=line, **kwargs)
         self.minutes.append(m)
         self.settopic()
     def do_meetingtopic(self, nick, line, **kwargs):
@@ -232,19 +231,19 @@ class MeetingCommands(object):
     def do_agreed(self, nick, **kwargs):
         """Add aggreement to the minutes - chairs only."""
         if not self.isChair(nick): return
-        m = Agreed(nick, **kwargs)
+        m = items.Agreed(nick, **kwargs)
         self.minutes.append(m)
     do_agree = do_agreed
     def do_accepted(self, nick, **kwargs):
         """Add aggreement to the minutes - chairs only."""
         if not self.isChair(nick): return
-        m = Accepted(nick, **kwargs)
+        m = items.Accepted(nick, **kwargs)
         self.minutes.append(m)
     do_accept = do_accepted
     def do_rejected(self, nick, **kwargs):
         """Add aggreement to the minutes - chairs only."""
         if not self.isChair(nick): return
-        m = Rejected(nick, **kwargs)
+        m = items.Rejected(nick, **kwargs)
         self.minutes.append(m)
     do_rejected = do_rejected
     def do_chair(self, nick, line, **kwargs):
@@ -306,19 +305,19 @@ class MeetingCommands(object):
         been seen during the meeting will have an action item list
         made for them, but you can use the #nick command to cause a
         nick to be seen."""
-        m = Action(**kwargs)
+        m = items.Action(**kwargs)
         self.minutes.append(m)
     def do_info(self, **kwargs):
         """Add informational item to the minutes."""
-        m = Info(**kwargs)
+        m = items.Info(**kwargs)
         self.minutes.append(m)
     def do_idea(self, **kwargs):
         """Add informational item to the minutes."""
-        m = Idea(**kwargs)
+        m = items.Idea(**kwargs)
         self.minutes.append(m)
     def do_halp(self, **kwargs):
         """Add call for halp to the minutes."""
-        m = Halp(**kwargs)
+        m = items.Halp(**kwargs)
         self.minutes.append(m)
     do_help = do_halp
     def do_nick(self, nick, line, **kwargs):
@@ -332,7 +331,7 @@ class MeetingCommands(object):
             self.addnick(nick, lines=0)
     def do_link(self, **kwargs):
         """Add informational item to the minutes."""
-        m = Link(**kwargs)
+        m = items.Link(**kwargs)
         self.minutes.append(m)
     def do_commands(self, **kwargs):
         commands = [ "#"+x[3:] for x in dir(self) if x[:3]=="do_" ]
