@@ -60,13 +60,24 @@ class SupybotConfigProxy(object):
                                               channel=self.__C.M.channel)
             if not isinstance(value, (str, unicode)):
                 return value
+            # '.' is used to mean "this is not set, use the default
+            # value from the python config class.
             if value != '.':
                 value = value.replace('\\n', '\n')
                 return value
         # We don't have this value in the registry.  So, proxy it to
         # the normal config object.  This is also the path that all
         # functions take.
-        return getattr(self.__C, attrname)
+        value = getattr(self.__C, attrname)
+        # If the value is an instance method, we need to re-bind it to
+        # the new config class so that we will get the data values
+        # defined in supydot (otherwise attribute lookups in the
+        # method will bypass the supybot proxy and just use default
+        # values).  This will slow things down a little bit, but
+        # that's just the cost of duing business.
+        if hasattr(value, 'im_func'):
+            return types.MethodType(value.im_func, self, value.im_class)
+        return value
 
 
 
