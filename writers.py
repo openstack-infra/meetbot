@@ -312,5 +312,7 @@ class HTMLfromRST(object):
     def format(self, M):
         import docutils.core
         rst = RST().format(M)
-        rstToHTML = docutils.core.publish_string(rst, writer_name='html')
+        rstToHTML = docutils.core.publish_string(rst, writer_name='html',
+                             settings_overrides={'file_insertion_enabled': 0,
+                                                 'raw_enabled': 0})
         return rstToHTML
