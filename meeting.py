@@ -36,8 +36,10 @@ import stat
 
 import pygments
 
-import writers ; reload(writers)
-import items   ; reload(items)
+import writers
+import items
+reload(writers)
+reload(items)
 
 
 class Config(object):
