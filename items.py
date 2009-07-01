@@ -49,6 +49,7 @@ class _BaseItem(object):
         return 'l-'+str(self.linenum)
 
 class Topic(_BaseItem):
+    itemtype = 'TOPIC'
     def __init__(self, nick, line, linenum, time_):
         self.nick = nick ; self.topic = line ; self.linenum = linenum
         self.time = time.strftime("%H:%M:%S", time_)
