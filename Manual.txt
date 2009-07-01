@@ -292,12 +292,22 @@ Hints on how to run an effective meeting
  * Have an agenda.  Think about the agenda beforehand, so that
    attendees are not tempted to jump ahead and discuss future items.
    This will make it very hard to follow.
+ * *Liberally* use the ``#action`` command, making sure to include the
+   nick of the person responsible.  It will produce an easy-to-scan
+   list of things to do, as well as a sorted-by-nick version.  This
+   will make these things more likely to get done.
+ * In the same spirit, liberally use ``#info`` on important pieces of
+   data.  If you think you'll want to refer to it again, ``#info``
+   it.  Assigning someone to watch the meeting to ``#info`` other
+   people's lines (if they forget) usually pays off.
  * Don't be afraid to tell attendees to wait for a future topic to
    discuss something.
+ * Delegate where possible and have those interested discuss the
+   details after the meeting, where applicable.  No need to take
+   everyone's time if not everyone needs to decide.  (This only
+   applies to some types of meetings)
  * Sometimes one chair to manage the topic at hand, and one chair to
    manage all people who are going off-topic, can help.
- * Delegate where possible and have those interested discuss the
-   details after the meeting, where applicable.
 
 
 
