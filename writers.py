@@ -97,7 +97,7 @@ class HTML(object):
         import meeting
         for m in M.minutes:
             # The hack below is needed because of pickling problems
-            if not isinstance(m, items.Action): continue
+            if m.itemtype != "ACTION": continue
             data.append("  <li>%s</li>"%m.line) #already escaped
         data.append("</ol>\n\n<br>")
         
@@ -108,7 +108,7 @@ class HTML(object):
             headerPrinted = False
             for m in M.minutes:
                 # The hack below is needed because of pickling problems
-                if not isinstance(m, items.Action): continue
+                if m.itemtype != "ACTION": continue
                 if m.line.find(nick) == -1: continue
                 if not headerPrinted:
                     data.append("  <li> %s <ol>"%nick)
@@ -121,7 +121,7 @@ class HTML(object):
         data.append("  <li><b>UNASSIGNED</b><ol>")
         numberUnassigned = 0
         for m in M.minutes:
-            if not isinstance(m, items.Action): continue
+            if m.itemtype != "ACTION": continue
             if getattr(m, 'assigned', False): continue
             data.append("    <li>%s</li>"%m.line) # already escaped
             numberUnassigned += 1
@@ -177,7 +177,7 @@ class RST(object):
         haveTopic = None
         for m in M.minutes:
             item = "* "+m.rst(M)
-            if isinstance(m, items.Topic):
+            if m.itemtype == "TOPIC":
                 item = wrapList(item, 0)
                 haveTopic = True
             else:
@@ -193,7 +193,7 @@ class RST(object):
         ActionItems = [ ]
         for m in M.minutes:
             # The hack below is needed because of pickling problems
-            if not isinstance(m, items.Action): continue
+            if m.itemtype != "ACTION": continue
             #already escaped
             ActionItems.append(wrapList("* %s"%m.line, indent=0))
         ActionItems = "\n\n".join(ActionItems)
@@ -204,7 +204,7 @@ class RST(object):
             headerPrinted = False
             for m in M.minutes:
                 # The hack below is needed because of pickling problems
-                if not isinstance(m, items.Action): continue
+                if m.itemtype != "ACTION": continue
                 if m.line.find(nick) == -1: continue
                 if not headerPrinted:
                     ActionItemsPerson.append("* %s"%nick)
@@ -218,7 +218,7 @@ class RST(object):
         ActionItemsPerson.append("* **UNASSIGNED**")
         numberUnassigned = 0
         for m in M.minutes:
-            if not isinstance(m, items.Action): continue
+            if m.itemtype != "ACTION": continue
             if getattr(m, 'assigned', False): continue
             # already escaped
             ActionItemsPerson.append(wrapList("* %s"%m.line, 2))

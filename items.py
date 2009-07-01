@@ -28,6 +28,7 @@ def inbase(i, chars='abcdefghijklmnopqrstuvwxyz', place=0):
 # they exist to aid in HTML-formatting.
 #
 class _BaseItem(object):
+    itemtype = None
     def get_replacements(self):
         replacements = { }
         for name in dir(self):
