@@ -135,18 +135,18 @@ class Config(object):
         return os.path.basename(self.filename())
 
     writer_map = {
-        '.log.html':writers.HTMLlog(),
-        '.html': writers.HTML(),
-        '.txt': writers.RST(),
-        #'.rst.html':writers.HTMLfromRST(),
+        '.log.html':writers.HTMLlog,
+        '.html': writers.HTML,
+        '.txt': writers.RST,
+        '.rst.html':writers.HTMLfromRST,
         }
     def save(self):
         """Write all output files."""
         if self.M._writeRawLog:
-            self.writer_map['.log.txt'] = writers.TextLog()
+            self.writer_map['.log.txt'] = writers.TextLog
         for extension, writer in self.writer_map.iteritems():
             rawname = self.filename()
-            text = writer.format(self.M)
+            text = writer(self.M).format()
             f = open(rawname+extension, 'w')
             if self.M._restrictlogs: self.restrictPermissions(f)
             f.write(self.enc(text))

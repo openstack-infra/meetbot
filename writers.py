@@ -19,17 +19,20 @@ def rst(text):
     return text
 
 class _BaseWriter(object):
-    pass
+    def __init__(self, M):
+        self.M = M
 
-class TextLog(object):
-    def format(self, M):
+class TextLog(_BaseWriter):
+    def format(self):
+        M = self.M
         """Write raw text logs."""
         return "\n".join(M.lines)
 
 
-class HTMLlog(object):
-    def format(self, M):
+class HTMLlog(_BaseWriter):
+    def format(self):
         """Write pretty HTML logs."""
+        M = self.M
         # pygments lexing setup:
         # (pygments HTML-formatter handles HTML-escaping)
         import pygments
@@ -57,9 +60,10 @@ class HTMLlog(object):
         return out
 
 
-class HTML(object):
-    def format(self, M):
+class HTML(_BaseWriter):
+    def format(self):
         """Write the minutes summary."""
+        M = self.M
         data = [ ]
         if M._meetingTopic:
             pageTitle = "%s: %s"%(M.channel, M._meetingTopic)
@@ -145,12 +149,10 @@ class HTML(object):
 
         return "\n".join(data)
 
-class RST(object):
-    def __init__(self):
-        pass
-
-    def format(self, M):
+class RST(_BaseWriter):
+    def format(self):
         """Return a ReStructured Text minutes summary."""
+        M = self.M
         dedent = textwrap.dedent
         wrap = textwrap.wrap
         fill = textwrap.fill
@@ -307,11 +309,12 @@ class RST(object):
         #osys.exit()
         return body
 
-class HTMLfromRST(object):
+class HTMLfromRST(_BaseWriter):
 
-    def format(self, M):
+    def format(self):
+        M = self.M
         import docutils.core
-        rst = RST().format(M)
+        rst = RST(M).format()
         rstToHTML = docutils.core.publish_string(rst, writer_name='html',
                              settings_overrides={'file_insertion_enabled': 0,
                                                  'raw_enabled': 0})

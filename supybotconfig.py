@@ -36,12 +36,12 @@ class WriterMap(registry.String):
         for e, w in writer_map.iteritems():
             if not hasattr(w, "format"):
                 raise ValueError("Writer %s must have method .format()"%
-                                 w.__class__.__name__)
+                                 w.__name__)
             self.value = writer_map
     def __str__(self):
         writers_string = [ ]
         for ext, w in self.value.iteritems():
-            name = w.__class__.__name__
+            name = w.__name__
             writers_string.append("%s:%s"%(name, ext))
         return " ".join(writers_string)
 
