@@ -221,7 +221,7 @@ class RST(object):
             if not isinstance(m, items.Action): continue
             if getattr(m, 'assigned', False): continue
             # already escaped
-            ActionItemsPerson.append(wrapList("* %s"%m.line), 2)
+            ActionItemsPerson.append(wrapList("* %s"%m.line, 2))
             numberUnassigned += 1
         if numberUnassigned == 0: ActionItemsPerson.append("  * (none)")
         #ActionItemsPerson.append('  </ol>\n</li>')
