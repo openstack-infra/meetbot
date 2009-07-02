@@ -68,8 +68,10 @@ class Topic(_BaseItem):
 
 class GenericItem(_BaseItem):
     itemtype = ''
-    start = ''
-    end = ''
+    starthtml = ''
+    endhtml = ''
+    startrst = ''
+    endrst = ''
     def __init__(self, nick, line, linenum, time_):
         self.nick = nick ; self.line = line ; self.linenum = linenum
         self.time = time.strftime("%H:%M:%S", time_)
@@ -79,7 +81,7 @@ class GenericItem(_BaseItem):
         repl['line'] = writers.html(self.line)
         repl['link'] = M.config.basename+'.log.html'
         return """<tr><td><a href='%(link)s#%(anchor)s'>%(time)s</a></td>
-        <td>%(itemtype)s</td><td>%(nick)s</td><td>%(start)s%(line)s%(end)s</td>
+        <td>%(itemtype)s</td><td>%(nick)s</td><td>%(starthtml)s%(line)s%(endhtml)s</td>
         </tr>"""%repl
     def rst(self, M):
         self.link = M.config.basename+'.log.html'
@@ -99,12 +101,12 @@ class Halp(GenericItem):
     itemtype = 'HALP'
 class Accepted(GenericItem):
     itemtype = 'ACCEPTED'
-    start = '<font color="green">'
-    end = '</font>'
+    starthtml = '<font color="green">'
+    endhtml = '</font>'
 class Rejected(GenericItem):
     itemtype = 'REJECTED'
-    start = '<font color="red">'
-    end = '</font>'
+    starthtml = '<font color="red">'
+    endhtml = '</font>'
 class Link(_BaseItem):
     itemtype = 'LINK'
     def __init__(self, nick, line, linenum, time_):
