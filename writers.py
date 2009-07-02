@@ -176,7 +176,7 @@ class HTML(_BaseWriter):
         </head>
         <body>
         <h1>%(pageTitle)s</h1>
-        Meeting started by %(chair)s at %(starttime)s %(timeZone)s.
+        Meeting started by %(owner)s at %(starttime)s %(timeZone)s.
         (<a href="%(fullLogs)s">full logs</a>)<br>
         \n\n<table border=1>
         %(MeetingItems)s
