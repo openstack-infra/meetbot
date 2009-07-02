@@ -347,5 +347,12 @@ class HTMLfromRST(_BaseWriter):
         rst = RST(M).format()
         rstToHTML = docutils.core.publish_string(rst, writer_name='html',
                              settings_overrides={'file_insertion_enabled': 0,
-                                                 'raw_enabled': 0})
+                                                 'raw_enabled': 0,
+                                                 'output_encoding':'utf-8'})
+        # Unfortunantly, docutils forces us to encode to some charset.
+        # We have to return a utf-8 thing to be encoded later, so we
+        # hack decode here, only to be re-encoded later.  (I've dug
+        # into the docutils internals, it's not obvious that I could
+        # do this easily.)
+        rstToHTML = rstToHTML.decode('utf-8', 'replace')
         return rstToHTML
