@@ -222,6 +222,7 @@ class HTML(_BaseWriter):
                      'ActionItemsPerson': ActionItemsPerson,
                      'PeoplePresent':PeoplePresent,
                      })
+        body = body%repl
         return body
 
 
