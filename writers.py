@@ -18,9 +18,62 @@ def html(text):
 def rst(text):
     return text
 
+# wraping functions (for RST)
+class TextWrapper(textwrap.TextWrapper):
+    wordsep_re = re.compile(r'(\s+)')
+def wrapList(item, indent=0):
+    return TextWrapper(width=72, initial_indent=' '*indent,
+                       subsequent_indent= ' '*(indent+2),
+                       break_long_words=False).fill(item)
+def replaceWRAP(item):
+    re_wrap = re.compile('WRAP(.*)WRAP', re.DOTALL)
+    def repl(m):
+        return TextWrapper(width=72, break_long_words=False).fill(m.group(1))
+    return re_wrap.sub(repl, item)
+
+
+
+
 class _BaseWriter(object):
     def __init__(self, M):
         self.M = M
+
+    @property
+    def pagetitle(self):
+        if self.M._meetingTopic:
+            return "%s: %s"%(self.M.channel, self.M._meetingTopic)
+        return "%s Meeting"%self.M.channel
+
+    def replacements(self):
+        return {'pageTitle':self.pagetitle,
+                'owner':self.M.owner,
+                'starttime':time.strftime("%H:%M:%S", self.M.starttime),
+                'endtime':time.strftime("%H:%M:%S", self.M.endtime),
+                'timeZone':self.M.config.timeZone,
+                'fullLogs':self.M.config.basename+'.log.html',
+                'MeetBotInfoURL':self.M.config.MeetBotInfoURL,
+             }
+    def iterNickCounts(self):
+        nicks = [ (n,c) for (n,c) in self.M.attendees.iteritems() ]
+        nicks.sort(key=lambda x: x[1], reverse=True)
+        return nicks
+
+    def iterActionItemsNick(self):
+        for nick in sorted(self.M.attendees.keys(), key=lambda x: x.lower()):
+            def nickitems():
+                for m in self.M.minutes:
+                    # The hack below is needed because of pickling problems
+                    if m.itemtype != "ACTION": continue
+                    if m.line.find(nick) == -1: continue
+                    m.assigned = True
+                    yield m
+            yield nick, nickitems()
+    def iterActionItemsUnassigned(self):
+        for m in self.M.minutes:
+            if m.itemtype != "ACTION": continue
+            if getattr(m, 'assigned', False): continue
+            yield m
+
 
 class TextLog(_BaseWriter):
     def format(self):
@@ -64,114 +117,120 @@ class HTML(_BaseWriter):
     def format(self):
         """Write the minutes summary."""
         M = self.M
-        data = [ ]
-        if M._meetingTopic:
-            pageTitle = "%s: %s"%(M.channel, M._meetingTopic)
-        else:
-            pageTitle = "%s Meeting"%M.channel
         # Header and things stored
-        data.append(
-        '''<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-        <html>
-        <head>
-        <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
-        <title>%s</title>
-        </head>
-        <body>
-        <h1>%s</h1>
-        Meeting started by %s at %s %s.  (<a href="%s">full logs</a>)<br>
-        \n\n<table border=1>'''%(pageTitle, pageTitle, M.owner,
-                             time.strftime("%H:%M:%S", M.starttime),
-                             M.config.timeZone,
-                             M.config.basename+'.log.html',
-                                 ))
+
         # Add all minute items to the table
+        MeetingItems = [ ]
         for m in M.minutes:
-            data.append(m.html(M))
+            MeetingItems.append(m.html(M))
+        MeetingItems = "\n".join(MeetingItems)
+
         # End the log portion
-        data.append("""</table>
-        Meeting ended at %s %s.  (<a href="%s">full logs</a>)"""%\
-            (time.strftime("%H:%M:%S", M.endtime), M.config.timeZone,
-             M.config.basename+'.log.html'))
-        data.append("\n<br><br><br>")
 
 
         # Action Items
-        data.append("<b>Action Items</b><ol>")
-        import meeting
+        ActionItems = [ ]
         for m in M.minutes:
             # The hack below is needed because of pickling problems
             if m.itemtype != "ACTION": continue
-            data.append("  <li>%s</li>"%m.line) #already escaped
-        data.append("</ol>\n\n<br>")
-        
+            ActionItems.append("  <li>%s</li>"%m.line) #already escaped
+        ActionItems = "\n".join(ActionItems)
 
         # Action Items, by person (This could be made lots more efficient)
-        data.append("<b>Action Items, by person</b>\n<ol>")
-        for nick in sorted(M.attendees.keys(), key=lambda x: x.lower()):
+        ActionItemsPerson = [ ]
+        for nick, items in self.iterActionItemsNick():
             headerPrinted = False
-            for m in M.minutes:
-                # The hack below is needed because of pickling problems
-                if m.itemtype != "ACTION": continue
-                if m.line.find(nick) == -1: continue
+            for m in items:
                 if not headerPrinted:
-                    data.append("  <li> %s <ol>"%nick)
+                    ActionItemsPerson.append("  <li> %s <ol>"%html(nick))
                     headerPrinted = True
-                data.append("    <li>%s</li>"%m.line) # already escaped
-                m.assigned = True
+                ActionItemsPerson.append("    <li>%s</li>"%html(m.line))
             if headerPrinted:
-                data.append("  </ol></li>")
+                ActionItemsPerson.append("  </ol></li>")
         # unassigned items:
-        data.append("  <li><b>UNASSIGNED</b><ol>")
+        ActionItemsPerson.append("  <li><b>UNASSIGNED</b><ol>")
         numberUnassigned = 0
-        for m in M.minutes:
-            if m.itemtype != "ACTION": continue
-            if getattr(m, 'assigned', False): continue
-            data.append("    <li>%s</li>"%m.line) # already escaped
+        for m in self.iterActionItemsUnassigned():
+            ActionItemsPerson.append("    <li>%s</li>"%html(m.line))
             numberUnassigned += 1
-        if numberUnassigned == 0: data.append("    <li>(none)</li>")
-        data.append('  </ol>\n</li>')
-        # clean-up
-        data.append("</ol>\n\n<br>")
-
+        if numberUnassigned == 0:
+            ActionItemsPerson.append("    <li>(none)</li>")
+        ActionItemsPerson.append('  </ol>\n</li>')
+        ActionItemsPerson = "\n".join(ActionItemsPerson)
 
         # People Attending
-        data.append("""<b>People Present (lines said):</b><ol>""")
+        PeoplePresent = [ ]
         # sort by number of lines spoken
-        nicks = [ (n,c) for (n,c) in M.attendees.iteritems() ]
-        nicks.sort(key=lambda x: x[1], reverse=True)
-        for nick in nicks:
-            data.append('  <li>%s (%s)</li>'%(nick[0], nick[1]))
-        data.append("</ol>\n\n<br>")
-        data.append("""Generated by <a href="%s">MeetBot</a>."""%
-                                                  M.config.MeetBotInfoURL)
-        data.append("</body></html>")
+        for nick, count in self.iterNickCounts():
+            PeoplePresent.append('  <li>%s (%s)</li>'%(nick, count))
+        PeoplePresent = "\n".join(PeoplePresent)
 
-        return "\n".join(data)
+
+
+        body = '''\
+        <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+        <html>
+        <head>
+        <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+        <title>%(pageTitle)s</title>
+        </head>
+        <body>
+        <h1>%(pageTitle)s</h1>
+        Meeting started by %(chair)s at %(starttime)s %(timeZone)s.
+        (<a href="%(fullLogs)s">full logs</a>)<br>
+        \n\n<table border=1>
+        %(MeetingItems)s
+        </table>
+        Meeting ended at %(endtime)s %(timeZone)s.
+        (<a href="%(fullLogs)s">full logs</a>)
+
+        <br><br><br>
+
+        <b>Action Items</b><ol>
+        %(ActionItems)s
+        </ol>
+        <br>
+
+        <b>Action Items, by person</b>\n<ol>
+        %(ActionItemsPerson)s
+        </ol><br>
+
+        <b>People Present (lines said):</b><ol>
+        %(PeoplePresent)s
+        </ol>
+
+        <br>
+        Generated by <a href="%(MeetBotInfoURLs">MeetBot</a>."""
+        </body></html>
+        '''
+
+
+        #%(pageTitle, pageTitle, M.owner,
+        #  time.strftime("%H:%M:%S", M.starttime),
+        #  M.config.timeZone,
+        #  M.config.basename+'.log.html',
+        #  time.strftime("%H:%M:%S", M.endtime), M.config.timeZone,
+        #     M.config.basename+'.log.html'
+        #                         ))
+
+
+        body = textwrap.dedent(body)
+        body = replaceWRAP(body)
+        repl = self.replacements()
+        repl.update({'MeetingItems':MeetingItems,
+                     'ActionItems': ActionItems,
+                     'ActionItemsPerson': ActionItemsPerson,
+                     'PeoplePresent':PeoplePresent,
+                     })
+        return body
+
 
 class RST(_BaseWriter):
     def format(self):
         """Return a ReStructured Text minutes summary."""
         M = self.M
-        dedent = textwrap.dedent
-        wrap = textwrap.wrap
-        fill = textwrap.fill
-        def wrapList(item, indent=0):
-            return fill(item, 72,
-                        initial_indent=' '*indent,
-                        subsequent_indent= ' '*(indent+2))
-        def replaceWRAP(item):
-            re_wrap = re.compile('WRAP(.*)WRAP', re.DOTALL)
-            def repl(m):
-                return fill(m.group(1), 72,
-                            break_long_words=False)
-            return re_wrap.sub(repl, item)
 
-
-        if M._meetingTopic:
-            pageTitle = "%s: %s"%(M.channel, M._meetingTopic)
-        else:
-            pageTitle = "%s Meeting"%M.channel
+        pageTitle = self.pagetitle
 
         MeetingItems = [ ]
         M.rst_urls = [ ]
@@ -190,7 +249,7 @@ class RST(_BaseWriter):
         MeetingURLs = "\n".join(M.rst_urls)
         del M.rst_urls, M.rst_refs
         MeetingItems = MeetingItems + '\n\n'+MeetingURLs
-            
+
         # Action Items
         ActionItems = [ ]
         for m in M.minutes:
@@ -235,10 +294,8 @@ class RST(_BaseWriter):
         # People Attending
         PeoplePresent = [ ]
         # sort by number of lines spoken
-        nicks = [ (n,c) for (n,c) in M.attendees.iteritems() ]
-        nicks.sort(key=lambda x: x[1], reverse=True)
-        for nick in nicks:
-            PeoplePresent.append('* %s (%s)'%(nick[0], nick[1]))
+        for nick, count in self.iterNickCounts():
+            PeoplePresent.append('* %s (%s)'%(nick, count))
         PeoplePresent = "\n\n".join(PeoplePresent)
 
         # End the log portion
@@ -289,24 +346,16 @@ class RST(_BaseWriter):
 
         .. _`MeetBot`: %(MeetBotInfoURL)s
         """
-        body = replaceWRAP(dedent(body))
-        body = body%{'titleBlock':('='*len(pageTitle)),
-             'pageTitle':pageTitle,
-             'owner':M.owner,
-             'starttime':time.strftime("%H:%M:%S", M.starttime),
-             'timeZone':M.config.timeZone,
-             'fullLogs':M.config.basename+'.log.html',
-             'endtime':time.strftime("%H:%M:%S", M.endtime),
-             'timeZone':M.config.timeZone,
-             'ActionItems': ActionItems,
-             'ActionItemsPerson': ActionItemsPerson,
-             'MeetBotInfoURL':M.config.MeetBotInfoURL,
-             'PeoplePresent':PeoplePresent,
-             'MeetingItems':MeetingItems,
-             }
-        #print body
-        #from fitz import interactnow
-        #osys.exit()
+        body = textwrap.dedent(body)
+        body = replaceWRAP(body)
+        repl = self.replacements()
+        repl.update({'titleBlock':('='*len(repl['pageTitle'])),
+                     'MeetingItems':MeetingItems,
+                     'ActionItems': ActionItems,
+                     'ActionItemsPerson': ActionItemsPerson,
+                     'PeoplePresent':PeoplePresent,
+                     })
+        body = body%repl
         return body
 
 class HTMLfromRST(_BaseWriter):
