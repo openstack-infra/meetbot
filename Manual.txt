@@ -208,11 +208,11 @@ Less-used Commands
   supybot help.  See #commands.
 
 #accepted (alias #accept)
-  Mark something as agreed on.  The rest of the line is the details.
+  Mark something as accepted.  The rest of the line is the details.
   (Chairs only.)
 
 #rejected (alias #reject)
-  Mark something as agreed on.  The rest of the line is the details.
+  Mark something as rejected.  The rest of the line is the details.
   (Chairs only.)
 
 #save
@@ -280,7 +280,9 @@ bot.
 
 ``deletemeeting <channel> <network> <saveit=True>``
   Delete a meeting from the cache.  If save is given, save the meeting
-  first.  The default value of ``save`` is True.
+  first.  The default value of ``save`` is True.  This is useful for
+  when MeetBot becomes broken and is unable to properly save a
+  meeting, rendering the ``#endmeeting`` command non-functional.
 
 
 
@@ -317,44 +319,51 @@ Configuration
 
 Configuration is done by creating a file ``meetingLocalConfig.py`` in
 the plugin directory, or somewhere in your PYTHONPATH.  It works by
-(automatically) subclassing the Config class.  Here is a basic usuage
-example (put this in ``meetingLocalConfig.py``)::
+(automatically, not user-visible) subclassing the Config class.
+
+Here is a minimal usage example.  You need at *least* this much to
+make it run. Put this in ``meetingLocalConfig.py`` before you first
+start supybot::
 
     Class Config(object):
+        # These two are **required**:
         logFileDir = '/home/richard/meetbot/'
         logUrlPrefix = 'http://rkd.zgib.net/meetbot/'
+
+Two other more commonly used options are::
         
         filenamePattern = '%(channel)s/%%Y/%(channel)s.%%F-%%H.%%M'
-        
         MeetBotInfoURL = 'http://some_other_side.tld'
-        
-Only some configuration options are documented here, more are
-documented in the very top of ``meeting.py``.  Note that you don't
-subclass anything yourself, that happens automatically.
 
-Since this is a proper module execution and subclass, you can do some
-crazy things like add a new meeting command or meeting agenda item
-type.
+Place all of the configuration variables inside of the class
+body like this.
 
-To reload a configuration, you can just reload the plugin in supybot
---- the module is reloaded.  Specifically, ``/msg YourBotName reload
-MeetBot``
+``meetingLocalConfig.py`` is a complete execution, and causes a
+subclass of the main Config object.  Thus, you can do some advanced
+(or just crazy) things like add a new meeting command, meeting
+agenda item type, or more.  Not all of these are documented here.
+
+To reload a configuration in a running supybot, you can just reload
+the plugin in supybot --- the module is reloaded.  Specifically,
+``/msg YourBotName reload MeetBot``.
 
 
 
 Supybot-based Config
 --------------------
 
-There is a mode where the supybot registry system can be used to set
-the values of some configuration variables.  To enable this system,
-first it must be enabled in the supybot config system, then the
-MeetBot plugin must be reloaded::
+In addition to the normal ``meetingLocalConfig.py`` based
+configuration, there is a mode where the supybot registry system can
+be used to set the values of some configuration variables.  To enable
+this system, first the
+``supybot.plugins.MeetBot.enableSupybotBasedConfig`` variable must be
+set to True.  Then the MeetBot plugin must be reloaded::
 
-    /msg YourBot config supybot.plugins.MeetBot enableSupybotBasedConfig True
+    /msg YourBot config supybot.plugins.MeetBot.enableSupybotBasedConfig True
     /msg YourBot reload MeetBot
 
-List the values available for configuration (this list may not be up
-to date)::
+Now you can list the values available for configuration (the list
+below may not be up to date)::
 
     /msg YourBot config list supybot.plugins.MeetBot
     ----> #endMeetingMessage, #filenamePattern, #input_codec,
@@ -363,16 +372,16 @@ to date)::
           #startMeetingMessage, #timeZone, #usefulCommands, 
           enableSupybotBasedConfig, and public
 
-Setting a value::
+Setting a value for a variable::
 
     /msg YourBot config supybot.plugins.MeetBot.logUrlPrefix ...
     ... http://meetings.yoursite.net/
 
 
-At present, not all possible variables are exported to supybot.  All
-string variables are, as well certain other variables for which a
-parser has been written.  If a variable doesn't appear in the supybot
-registry, it can't be set there.
+At present, not all variables are exported to supybot.  All string
+variables are, as well certain other variables for which a wrapper has
+been written.  If a variable doesn't appear in the supybot registry,
+it can't be set via the registry.
 
 If you want to disable supybot-based config for security reasons, set
 ``dontBotConfig`` to True in your custom configuration class in
@@ -383,12 +392,17 @@ If you want to disable supybot-based config for security reasons, set
 Required or Important Configuration
 -----------------------------------
 
+These variables are set either in ``meetingLocalConfig.py`` (in the
+``Config`` class) or in the supybot registry.
+
 ``logFileDir``
     The filesystem directory in which the meeting outputs are stored.
+    **Required** or supybot can't save properly.
 
 ``logUrlPrefix``
     The URL corresponding to ``logFileDir``.  This is prepended to
     filenames when giving end-of-meeting links in the channel.
+    **Required** or supybot's URLs will be wrong.
 
 ``filenamePattern``
     This defaults to ``'%(channel)s/%%Y/%(channel)s.%%F-%%H.%%M'``,
@@ -418,10 +432,8 @@ Required or Important Configuration
 Other Config Variables
 ----------------------
 
-``usefulCommands``
-    This is a list (Defaulting to "``#action #agreed #halp #info #idea
-    #link #topic``" which is presented at the start of the meetings to
-    remind attendees of how to use meetbot.
+These variables are set either in ``meetingLocalConfig.py`` (in the
+``Config`` class) or in the supybot registry.
 
 ``RestrictPerm``
     An int listing which permissions to remove when using the
@@ -485,21 +497,47 @@ Other Config Variables
 Advanced Configuration
 ----------------------
 
+This gives a few examples of things you can do via
+``meetingLocalConfig.py``.  Most people probably won't need these
+things, and they aren't thoroughly explained here.
+
+You can make a per-channel config::
+
+    class Config(object):
+        def init(self):
+	    if self.M.channel == '#some-channel':
+                self.logFileDir = '/some/directory'
+            else:
+                self.logFileDir = '/some/other/directory'
+
+
+The display styles (in html writers) can be modified also, by using
+the starthtml and endhtml attributes (put this in
+meetingLocalConfig.py::
+
+    import items
+    items.Agreed.starthtml = '<font color="red">'
+    items.Agreed.endhtml = '</font>'
+
+
 Adding a new custom command via ``meetingLocalConfig.py``.  This
 likely won't make sense unless you examine the code a bit::
 
     class Config(object):
-        def __init__(self, channel):
-            # We need to do the other default configuration first
-            super(Config, self).__init__(channel)
+        def init(self):
             def do_party(self, nick, time_, **kwargs):
                 self.reply("We're having a party in this code!")
                 self.reply(("Owner, Chairs: %s %s"%(
                                      self.owner,sorted(self.chairs.keys()))))
-            self.M.do_party = types.UnboundMethodType(
+            self.M.do_party = types.MethodType(
                                            do_party, self.M, self.M.__class__)
 
 
+Make a command alias.  Make ``#weagree`` an alias for ``#agreed``::
+
+    class Config(object):
+        def init(self):
+	    self.M.do_weagree = self.M.do_agreed
 
 
 Help and Support

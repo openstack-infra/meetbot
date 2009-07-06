@@ -36,6 +36,8 @@ INSTALLATION
 
 Requirements: 
 * pygments (debian package python-pygments) (for pretty IRC logs).
+* docutils (debian package python-docutils) (for restructured text to
+            HTML conversion)
 
 * Install supybot.  You can use supybot-wizard to make a bot 
   configuration.
