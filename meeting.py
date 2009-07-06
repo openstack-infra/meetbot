@@ -47,9 +47,11 @@ class Config(object):
     # Throw any overrides into meetingLocalConfig.py in this directory:
     #
     # Where to store files on disk
-    logFileDir = '/home/richard/meetbot/'
+    # Example:   logFileDir = '/home/richard/meetbot/'
+    logFileDir = '.'
     # The links to the logfiles are given this prefix
-    logUrlPrefix = 'http://rkd.zgib.net/meetbot/'
+    # Example:   logUrlPrefix = 'http://rkd.zgib.net/meetbot/'
+    logUrlPrefix = ''
     # Give the pattern to save files into here.  Use %(channel)s for
     # channel.  This will be sent through strftime for substituting it
     # times, howover, for strftime codes you must use doubled percent
