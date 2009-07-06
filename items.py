@@ -64,7 +64,9 @@ class Topic(_BaseItem):
     def rst(self, M):
         self.link = M.config.basename+'.log.html'
         self.rstref = self.makeRSTref(M)
-        return """**%(topic)s**  (%(rstref)s_)"""%self.get_replacements()
+        repl = self.get_replacements()
+        if repl['topic']=='': repl['topic']=' '
+        return """**%(topic)s**  (%(rstref)s_)"""%repl
 
 class GenericItem(_BaseItem):
     itemtype = ''
