@@ -67,8 +67,6 @@ class Config(object):
     # regular expression for parsing commands.  First group is the cmd name,
     # second group is the rest of the line.
     command_RE = re.compile(r'#([\w]+)[ \t]*(.*)')
-    # This is the help printed when a meeting starts
-    usefulCommands = "#action #agreed #halp #info #idea #link #topic"
     # The channels which won't have date/time appended to the filename.
     specialChannels = ("#meetbot-test", "#meetbot-test2")
     specialChannelFilenamePattern = '%(channel)s/%(channel)s'
@@ -103,6 +101,8 @@ class Config(object):
 
     def __init__(self, M):
         self.M = M
+        if hasattr(self, "init"):
+            self.init()
     def filename(self, url=False):
         # provide a way to override the filename.  If it is
         # overridden, it must be a full path (and the URL-part may not
