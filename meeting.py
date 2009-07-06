@@ -139,8 +139,8 @@ class Config(object):
     writer_map = {
         '.log.html':writers.HTMLlog,
         '.html': writers.HTML,
-        '.txt': writers.RST,
-        '.rst.html':writers.HTMLfromRST,
+        '.txt': writers.ReST,
+        '.rst.html':writers.HTMLfromReST,
         }
     def save(self):
         """Write all output files."""

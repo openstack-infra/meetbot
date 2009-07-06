@@ -39,6 +39,18 @@ class _BaseWriter(object):
     def __init__(self, M):
         self.M = M
 
+    def format(self, extension=None):
+        """Override this method to implement the formatting.
+
+        For file output writers, the method should return a unicode
+        object containing the contents of the file to write.
+
+        The argument 'extension' is the key from `writer_map`.  For
+        file writers, this can (and should) be ignored.  For non-file
+        outputs, this can be used to This can be used to pass data,
+        """
+        raise NotImplementedError
+
     @property
     def pagetitle(self):
         if self.M._meetingTopic:
@@ -77,14 +89,14 @@ class _BaseWriter(object):
 
 
 class TextLog(_BaseWriter):
-    def format(self):
+    def format(self, extension=None):
         M = self.M
         """Write raw text logs."""
         return "\n".join(M.lines)
 
 
 class HTMLlog(_BaseWriter):
-    def format(self):
+    def format(self, extension=None):
         """Write pretty HTML logs."""
         M = self.M
         # pygments lexing setup:
@@ -153,7 +165,7 @@ class HTML(_BaseWriter):
     </body></html>
     ''')
 
-    def format(self):
+    def format(self, extension=None):
         """Write the minutes summary."""
         M = self.M
 
@@ -213,7 +225,7 @@ class HTML(_BaseWriter):
         return body
 
 
-class RST(_BaseWriter):
+class ReST(_BaseWriter):
 
     body = textwrap.dedent("""\
     %(titleBlock)s
@@ -263,7 +275,7 @@ class RST(_BaseWriter):
     .. _`MeetBot`: %(MeetBotInfoURL)s
     """)
 
-    def format(self):
+    def format(self, extension=None):
         """Return a ReStructured Text minutes summary."""
         M = self.M
 
@@ -339,12 +351,12 @@ class RST(_BaseWriter):
         body = body%repl
         return body
 
-class HTMLfromRST(_BaseWriter):
+class HTMLfromReST(_BaseWriter):
 
-    def format(self):
+    def format(self, extension=None):
         M = self.M
         import docutils.core
-        rst = RST(M).format()
+        rst = ReST(M).format(extension)
         rstToHTML = docutils.core.publish_string(rst, writer_name='html',
                              settings_overrides={'file_insertion_enabled': 0,
                                                  'raw_enabled': 0,
