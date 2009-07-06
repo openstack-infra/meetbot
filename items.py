@@ -29,6 +29,10 @@ def inbase(i, chars='abcdefghijklmnopqrstuvwxyz', place=0):
 #
 class _BaseItem(object):
     itemtype = None
+    starthtml = ''
+    endhtml = ''
+    startrst = ''
+    endrst = ''
     def get_replacements(self):
         replacements = { }
         for name in dir(self):
@@ -50,6 +54,12 @@ class _BaseItem(object):
 
 class Topic(_BaseItem):
     itemtype = 'TOPIC'
+    html_template = """<tr><td><a href='%(link)s#%(anchor)s'>%(time)s</a></td>
+        <th colspan=3>%(starthtml)sTopic: %(topic)s%(endhtml)s</th>
+        </tr>"""
+    rst_template = """%(startrst)s%(topic)s%(endrst)s  (%(rstref)s_)"""
+    startrst = '**'
+    endrst = '**'
     def __init__(self, nick, line, linenum, time_):
         self.nick = nick ; self.topic = line ; self.linenum = linenum
         self.time = time.strftime("%H:%M:%S", time_)
@@ -58,22 +68,20 @@ class Topic(_BaseItem):
         repl['nick'] = writers.html(self.nick)
         repl['topic'] = writers.html(self.topic)
         repl['link'] = M.config.basename+'.log.html'
-        return """<tr><td><a href='%(link)s#%(anchor)s'>%(time)s</a></td>
-        <th colspan=3>Topic: %(topic)s</th>
-        </tr>"""%repl
+        return self.html_template%repl
     def rst(self, M):
         self.link = M.config.basename+'.log.html'
         self.rstref = self.makeRSTref(M)
         repl = self.get_replacements()
         if repl['topic']=='': repl['topic']=' '
-        return """**%(topic)s**  (%(rstref)s_)"""%repl
+        return self.rst_template%repl
 
 class GenericItem(_BaseItem):
     itemtype = ''
-    starthtml = ''
-    endhtml = ''
-    startrst = ''
-    endrst = ''
+    html_template = """<tr><td><a href='%(link)s#%(anchor)s'>%(time)s</a></td>
+        <td>%(itemtype)s</td><td>%(nick)s</td><td>%(starthtml)s%(line)s%(endhtml)s</td>
+        </tr>"""
+    rst_template = """*%(itemtype)s*: %(startrst)s%(line)s%(endrst)s  (%(rstref)s_)"""
     def __init__(self, nick, line, linenum, time_):
         self.nick = nick ; self.line = line ; self.linenum = linenum
         self.time = time.strftime("%H:%M:%S", time_)
@@ -82,13 +90,11 @@ class GenericItem(_BaseItem):
         repl['nick'] = writers.html(self.nick)
         repl['line'] = writers.html(self.line)
         repl['link'] = M.config.basename+'.log.html'
-        return """<tr><td><a href='%(link)s#%(anchor)s'>%(time)s</a></td>
-        <td>%(itemtype)s</td><td>%(nick)s</td><td>%(starthtml)s%(line)s%(endhtml)s</td>
-        </tr>"""%repl
+        return self.html_template%repl
     def rst(self, M):
         self.link = M.config.basename+'.log.html'
         self.rstref = self.makeRSTref(M)
-        return """*%(itemtype)s*: %(line)s  (%(rstref)s_)"""%self.get_replacements()
+        return self.rst_template%self.get_replacements()
 
 
 class Info(GenericItem):
@@ -111,6 +117,10 @@ class Rejected(GenericItem):
     endhtml = '</font>'
 class Link(_BaseItem):
     itemtype = 'LINK'
+    html_template = """<tr><td><a href='%(link)s#%(anchor)s'>%(time)s</a></td>
+        <td>%(itemtype)s</td><td>%(nick)s</td><td>%(starthtml)s<a href="%(url)s">%(url_readable)s</a> %(line)s%(endhtml)s</td>
+        </tr>"""
+    rst_template = """*%(itemtype)s*: %(startrst)s%(url)s %(line)s%(endrst)s  (%(rstref)s_)"""
     def __init__(self, nick, line, linenum, time_):
         self.nick = nick ; self.linenum = linenum
         self.time = time.strftime("%H:%M:%S", time_)
@@ -128,10 +138,8 @@ class Link(_BaseItem):
         repl['line'] = writers.html(self.line)
         repl['link'] = M.config.basename+'.log.html'
         self.link = M.config.basename+'.log.html'
-        return """<tr><td><a href='%(link)s#%(anchor)s'>%(time)s</a></td>
-        <td>%(itemtype)s</td><td>%(nick)s</td><td><a href="%(url)s">%(url_readable)s</a> %(line)s</td>
-        </tr>"""%repl
+        return self.html_template%repl
     def rst(self, M):
         self.link = M.config.basename+'.log.html'
         self.rstref = self.makeRSTref(M)
-        return """*%(itemtype)s*: %(url)s %(line)s  (%(rstref)s_)"""%self.get_replacements()
+        return self.rst_template%self.get_replacements()
