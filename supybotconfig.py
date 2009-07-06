@@ -27,9 +27,9 @@ class WriterMap(registry.String):
             writer, ext = writer.split(':')
             if not hasattr(writers, writer):
                 raise ValueError("Writer name not found: %s"%writer)
-            if len(ext) < 2 or ext[0] != '.':
-                raise ValueError("Extension must start with '.' and have "
-                                 "at least one more character.")
+            #if len(ext) < 2 or ext[0] != '.':
+            #    raise ValueError("Extension must start with '.' and have "
+            #                     "at least one more character.")
             writer_map[ext] = getattr(writers, writer)
         self.setValue(writer_map)
     def setValue(self, writer_map):
