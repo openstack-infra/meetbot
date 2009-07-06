@@ -144,15 +144,31 @@ class Config(object):
         }
     def save(self):
         """Write all output files."""
+        rawname = self.filename()
+        # We want to write the rawlog (.log.txt) first in case the
+        # other methods break.  That way, we have saved enough to
+        # replay.
         if self.M._writeRawLog:
-            self.writer_map['.log.txt'] = writers.TextLog
+            text = writers.TextLog(self.M).format('.log.txt')
+            self.writeToFile(self.enc(text), rawname+'.log.txt')
         for extension, writer in self.writer_map.iteritems():
-            rawname = self.filename()
-            text = writer(self.M).format()
-            f = open(rawname+extension, 'w')
-            if self.M._restrictlogs: self.restrictPermissions(f)
-            f.write(self.enc(text))
-            f.close()
+            text = writer(self.M).format(extension)
+            # If the writer returns a string or unicode object, then
+            # we should write it to a filename with that extension.
+            # If it doesn't, then it's assumed that the write took
+            # care of writing (or publishing or emailing or wikifying)
+            # it itself.
+            if isinstance(text, (str, unicode)):
+                self.writeToFile(self.enc(text), rawname+extension)
+    def writeToFile(self, string, filename):
+        """Write a given string to a file"""
+        # The reason we have this method just for this is to proxy
+        # through the _restrictPermissions logic.
+        f = open(filename, 'w')
+        if self.M._restrictlogs:
+            self.restrictPermissions(f)
+        f.write(string)
+        f.close()
     def restrictPermissions(self, f):
         """Remove the permissions given in the variable RestrictPerm."""
         f.flush()
