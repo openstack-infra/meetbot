@@ -321,7 +321,7 @@ class ReST(_BaseWriter):
                 haveTopic = True
             else:
                 if haveTopic: item = wrapList(item, 2)
-                else:         item = wrapList(item, 1)
+                else:         item = wrapList(item, 0)
             MeetingItems.append(item)
         MeetingItems = '\n\n'.join(MeetingItems)
         MeetingURLs = "\n".join(M.rst_urls)
