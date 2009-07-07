@@ -140,7 +140,8 @@ class HTMLlog(_BaseWriter):
         # That's only right before the i/o functions in the Config
         # object.
         formatter = HtmlFormatter(lineanchors='l',
-                                  full=True, style=M.config.pygmentizeStyle)
+                                  full=True, style=M.config.pygmentizeStyle,
+                                  output_encoding=self.M.config.output_codec)
         Lexer = IrcLogsLexer
         Lexer.tokens['msg'][1:1] = \
            [ # match:   #topic commands
@@ -390,11 +391,5 @@ class HTMLfromReST(_BaseWriter):
         rstToHTML = docutils.core.publish_string(rst, writer_name='html',
                              settings_overrides={'file_insertion_enabled': 0,
                                                  'raw_enabled': 0,
-                                                 'output_encoding':'utf-8'})
-        # Unfortunantly, docutils forces us to encode to some charset.
-        # We have to return a utf-8 thing to be encoded later, so we
-        # hack decode here, only to be re-encoded later.  (I've dug
-        # into the docutils internals, it's not obvious that I could
-        # do this easily.)
-        rstToHTML = rstToHTML.decode('utf-8', 'replace')
+                                'output_encoding':self.M.config.output_codec})
         return rstToHTML

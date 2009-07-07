@@ -158,8 +158,10 @@ class Config(object):
             # If it doesn't, then it's assumed that the write took
             # care of writing (or publishing or emailing or wikifying)
             # it itself.
+            if isinstance(text, unicode):
+                text = self.enc(text)
             if isinstance(text, (str, unicode)):
-                self.writeToFile(self.enc(text), rawname+extension)
+                self.writeToFile(text, rawname+extension)
     def writeToFile(self, string, filename):
         """Write a given string to a file"""
         # The reason we have this method just for this is to proxy
