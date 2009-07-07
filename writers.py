@@ -44,9 +44,10 @@ import items
 def html(text):
     """Escape bad sequences (in HTML) in user-generated lines."""
     return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+rstReplaceRE = re.compile('_( |-|$)')
 def rst(text):
     """Escapes bad sequences in reST (not implemented yet)"""
-    return text
+    return rstReplaceRE.sub(r'\_\1', text)
 
 # wraping functions (for RST)
 class TextWrapper(textwrap.TextWrapper):
