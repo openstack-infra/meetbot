@@ -77,13 +77,15 @@ class _BaseItem(object):
         while rstref in M.rst_refs:
             rstref = rstref_orig + inbase(count)
             count += 1
-        link = M.config.basename+'.log.html'
+        link = self.logURL(M)
         M.rst_urls.append(".. _%s: %s"%(rstref, link+"#"+self.anchor))
         M.rst_refs[rstref] = True
         return rstref
     @property
     def anchor(self):
         return 'l-'+str(self.linenum)
+    def logURL(self, M):
+        return M.config.basename+'.log.html'
 
 class Topic(_BaseItem):
     itemtype = 'TOPIC'
@@ -100,7 +102,7 @@ class Topic(_BaseItem):
         repl = self.get_replacements()
         repl['nick'] = writers.html(self.nick)
         repl['topic'] = writers.html(self.topic)
-        repl['link'] = M.config.basename+'.log.html'
+        repl['link'] = self.logURL(M)
         return self.html_template%repl
     def rst(self, M):
         self.rstref = self.makeRSTref(M)
@@ -108,7 +110,7 @@ class Topic(_BaseItem):
         if repl['topic']=='': repl['topic']=' '
         else:                 repl['topic']=writers.rst(self.topic)
         repl['nick'] = writers.rst(self.nick)
-        repl['link'] = M.config.basename+'.log.html'
+        repl['link'] = self.logURL(M)
         return self.rst_template%repl
 
 class GenericItem(_BaseItem):
@@ -124,14 +126,14 @@ class GenericItem(_BaseItem):
         repl = self.get_replacements()
         repl['nick'] = writers.html(self.nick)
         repl['line'] = writers.html(self.line)
-        repl['link'] = M.config.basename+'.log.html'
+        repl['link'] = self.logURL(M)
         return self.html_template%repl
     def rst(self, M):
         self.rstref = self.makeRSTref(M)
         repl = self.get_replacements()
         repl['nick'] = writers.rst(self.nick)
         repl['line'] = writers.rst(self.line)
-        repl['link'] = M.config.basename+'.log.html'
+        repl['link'] = self.logURL(M)
         return self.rst_template%repl
 
 
@@ -174,14 +176,13 @@ class Link(_BaseItem):
         repl['url'] = writers.html(self.url)
         repl['url_readable'] = writers.html(self.url)
         repl['line'] = writers.html(self.line)
-        repl['link'] = M.config.basename+'.log.html'
-        self.link = M.config.basename+'.log.html'
+        repl['link'] = self.logURL(M)
         return self.html_template%repl
     def rst(self, M):
         self.rstref = self.makeRSTref(M)
         repl = self.get_replacements()
         repl['nick'] = writers.rst(self.nick)
         repl['line'] = writers.rst(self.line)
-        repl['link'] = M.config.basename+'.log.html'
+        repl['link'] = self.logURL(M)
         #repl['url'] = writers.rst(self.url)
         return self.rst_template%repl

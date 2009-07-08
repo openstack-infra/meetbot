@@ -134,7 +134,7 @@ class Config(object):
         return path
     @property
     def basename(self):
-        return os.path.basename(self.filename())
+        return os.path.basename(self.M.config.filename())
 
     writer_map = {
         '.log.html':writers.HTMLlog,
