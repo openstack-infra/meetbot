@@ -49,7 +49,8 @@ try:
     meeting_cache
 except NameError:
     meeting_cache = {}
-                
+    recent_meetings = [ ]
+
 
 class MeetBot(callbacks.Plugin):
     """Add the help for "@plugin help MeetBot" here
@@ -102,6 +103,10 @@ class MeetBot(callbacks.Plugin):
             M._sendReply = _sendReply
             # callback  to get supybot registry values.
             M._registryValue = self.registryValue
+            recent_meetings.append(
+                (channel, irc.msg.tags['receivedOn'], time.ctime()))
+            if len(recent_meetings) > 10:
+                del recent_meetings[0]
         # If there is no meeting going on, then we quit
         if M is None: return
         # Add line to our meeting buffer.
@@ -163,6 +168,18 @@ class MeetBot(callbacks.Plugin):
         irc.reply("Deleted: meeting on (%s, %s)."%(channel, network))
     deletemeeting = wrap(deletemeeting, ['admin', "channel", "something",
                                optional("boolean", True)])
+    def recent(self, irc, msg, args):
+        reply = []
+        for channel, network, ctime in recent_meetings:
+            Mkey = (channel,network)
+            if Mkey in meeting_cache:   state = ", running"
+            else:                       state = ""
+            reply.append("(%s, %s, %s%s)"%(channel, network, ctime, state))
+        if reply:
+            irc.reply(" ".join(reply))
+        else:
+            irc.reply("No recent meetings in internal state.")
+    recent = wrap(recent, ['admin'])
 
     def pingall(self, irc, msg, args, message):
         """<text>
