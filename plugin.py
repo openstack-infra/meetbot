@@ -90,19 +90,18 @@ class MeetBot(callbacks.Plugin):
             if M is not None:
                 irc.error("Can't start another meeting, one is in progress.")
                 return
-            M = meeting.Meeting(channel=channel, owner=nick,
-                                oldtopic=irc.state.channels[channel].topic,
-                                writeRawLog=True)
-            meeting_cache[Mkey] = M
             # This callback is used to send data to the channel:
             def _setTopic(x):
                 irc.sendMsg(ircmsgs.topic(channel, x))
             def _sendReply(x):
                 irc.sendMsg(ircmsgs.privmsg(channel, x))
-            M._setTopic = _setTopic
-            M._sendReply = _sendReply
-            # callback  to get supybot registry values.
-            M._registryValue = self.registryValue
+            M = meeting.Meeting(channel=channel, owner=nick,
+                                oldtopic=irc.state.channels[channel].topic,
+                                writeRawLog=True,
+                                setTopic = _setTopic, sendReply = _sendReply,
+                                getRegistryValue = self.registryValue,
+                                )
+            meeting_cache[Mkey] = M
             recent_meetings.append(
                 (channel, irc.msg.tags['receivedOn'], time.ctime()))
             if len(recent_meetings) > 10:

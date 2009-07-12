@@ -366,12 +366,22 @@ class Meeting(MeetingCommands, object):
     _lurk = False
     _restrictlogs = False
     def __init__(self, channel, owner, oldtopic=None,
-                 filename=None, writeRawLog=False):
+                 filename=None, writeRawLog=False,
+                 setTopic=None, sendReply=None, getRegistryValue=None):
         self.config = Config(self)
+        if getRegistryValue is not None:
+            self._registryValue = getRegistryValue
+        if sendReply is not None:
+            self._sendReply = sendReply
+        if setTopic is not None:
+            self._setTopic = setTopic
         self.owner = owner
         self.channel = channel
         self.currenttopic = ""
-        self.oldtopic = oldtopic
+        if oldtopic:
+            self.oldtopic = self.config.dec(oldtopic)
+        else:
+            self.oldtopic = None
         self.lines = [ ]
         self.minutes = [ ]
         self.attendees = { }
