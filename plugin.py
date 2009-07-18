@@ -131,8 +131,8 @@ class MeetBot(callbacks.Plugin):
 
         Save all currently active meetings."""
         numSaved = 0
-        for M in meeting_cache:
-            M.save()
+        for M in meeting_cache.iteritems():
+            M.config.save()
         irc.reply("Saved %d meetings."%numSaved)
     savemeetings = wrap(savemeetings, ['admin'])
     def addchair(self, irc, msg, args, channel, network, nick):
@@ -162,7 +162,7 @@ class MeetBot(callbacks.Plugin):
             M = meeting_cache.get(Mkey, None)
             import time
             M.endtime = time.localtime()
-            M.save()
+            M.config.save()
         del meeting_cache[Mkey]
         irc.reply("Deleted: meeting on (%s, %s)."%(channel, network))
     deletemeeting = wrap(deletemeeting, ['admin', "channel", "something",
