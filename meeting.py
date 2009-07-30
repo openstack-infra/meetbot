@@ -250,7 +250,7 @@ class MeetingCommands(object):
         if not self.isChair(nick): return
         self.currenttopic = line
         m = items.Topic(nick=nick, line=line, **kwargs)
-        self.minutes.append(m)
+        self.additem(m)
         self.settopic()
     def do_meetingtopic(self, nick, line, **kwargs):
         """Set a meeting topic (included in all sub-topics)"""
@@ -270,19 +270,19 @@ class MeetingCommands(object):
         """Add aggreement to the minutes - chairs only."""
         if not self.isChair(nick): return
         m = items.Agreed(nick, **kwargs)
-        self.minutes.append(m)
+        self.additem(m)
     do_agree = do_agreed
     def do_accepted(self, nick, **kwargs):
         """Add aggreement to the minutes - chairs only."""
         if not self.isChair(nick): return
         m = items.Accepted(nick, **kwargs)
-        self.minutes.append(m)
+        self.additem(m)
     do_accept = do_accepted
     def do_rejected(self, nick, **kwargs):
         """Add aggreement to the minutes - chairs only."""
         if not self.isChair(nick): return
         m = items.Rejected(nick, **kwargs)
-        self.minutes.append(m)
+        self.additem(m)
     do_rejected = do_rejected
     def do_chair(self, nick, line, **kwargs):
         """Add a chair to the meeting."""
@@ -344,19 +344,19 @@ class MeetingCommands(object):
         made for them, but you can use the #nick command to cause a
         nick to be seen."""
         m = items.Action(**kwargs)
-        self.minutes.append(m)
+        self.additem(m)
     def do_info(self, **kwargs):
         """Add informational item to the minutes."""
         m = items.Info(**kwargs)
-        self.minutes.append(m)
+        self.additem(m)
     def do_idea(self, **kwargs):
         """Add informational item to the minutes."""
         m = items.Idea(**kwargs)
-        self.minutes.append(m)
+        self.additem(m)
     def do_halp(self, **kwargs):
         """Add call for halp to the minutes."""
         m = items.Halp(**kwargs)
-        self.minutes.append(m)
+        self.additem(m)
     do_help = do_halp
     def do_nick(self, nick, line, **kwargs):
         """Make meetbot aware of a nick which hasn't said anything.
@@ -370,7 +370,7 @@ class MeetingCommands(object):
     def do_link(self, **kwargs):
         """Add informational item to the minutes."""
         m = items.Link(**kwargs)
-        self.minutes.append(m)
+        self.additem(m)
     def do_commands(self, **kwargs):
         commands = [ "#"+x[3:] for x in dir(self) if x[:3]=="do_" ]
         commands.sort()
@@ -475,6 +475,18 @@ class Meeting(MeetingCommands, object):
             if line.split('//')[0] in self.config.UrlProtocols:
                 self.do_link(nick=nick, line=line,
                              linenum=linenum, time_=time_)
+
+        for writer in self.config.writers:
+            if hasattr(writer, 'addline'):
+                writer.addlogline(logline)
+
+    def additem(self, m):
+        """Add an item to the meeting minutes list.
+        """
+        self.minutes.append(m)
+        for writer in self.config.writers:
+            if hasattr(writer, 'additem'):
+                writer.additem(m)
 
 
 
