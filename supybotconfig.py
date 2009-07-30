@@ -77,9 +77,9 @@ class WriterMap(registry.String):
 
 
 class SupybotConfigProxy(object):
-    def __init__(self, M):
+    def __init__(self, *args, **kwargs):
         """Do the regular default configuration, and sta"""
-        self.__C = OriginalConfig(M)
+        self.__C = OriginalConfig(*args, **kwargs)
     
     def __getattr__(self, attrname):
         """Try to get the value from the supybot registry.  If it's in

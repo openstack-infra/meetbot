@@ -95,13 +95,32 @@ class Config(object):
                          "Log:            %(urlBasename)s.log.html")
     input_codec = 'utf-8'
     output_codec = 'utf-8'
+    update_realtime = False
     def enc(self, text):
         return text.encode(self.output_codec, 'replace')
     def dec(self, text):
         return text.decode(self.input_codec, 'replace')
 
-    def __init__(self, M):
+    writer_map = {
+        '.log.html':writers.HTMLlog,
+        '.html': writers.HTML,
+        '.2.html': writers.HTML2,
+        '.rst': writers.ReST,
+        '.txt': writers.Text,
+        '.rst.html':writers.HTMLfromReST,
+        }
+
+
+    def __init__(self, M, writeRawLog=False):
         self.M = M
+        self.writers = { }
+
+        if writeRawLog:
+            self.writers['.log.txt'] = writers.TextLog(self.M)
+        for extension, writer in self.writer_map.iteritems():
+            def save_file():
+                pass
+            self.writers[extension] = writer(self.M)
         if hasattr(self, "init"):
             self.init()
     def filename(self, url=False):
@@ -137,23 +156,19 @@ class Config(object):
     def basename(self):
         return os.path.basename(self.M.config.filename())
 
-    writer_map = {
-        '.log.html':writers.HTMLlog,
-        '.html': writers.HTML,
-        '.txt': writers.ReST,
-        '.rst.html':writers.HTMLfromReST,
-        }
     def save(self):
         """Write all output files."""
         rawname = self.filename()
         # We want to write the rawlog (.log.txt) first in case the
         # other methods break.  That way, we have saved enough to
         # replay.
-        if self.M._writeRawLog:
-            text = writers.TextLog(self.M).format('.log.txt')
+        writers = self.writers.copy()
+        if '.log.txt' in writers:
+            text = writers['.log.txt'].format('.log.txt')
             self.writeToFile(self.enc(text), rawname+'.log.txt')
-        for extension, writer in self.writer_map.iteritems():
-            text = writer(self.M).format(extension)
+            del writers['.log.txt']
+        for extension, writer in self.writers.iteritems():
+            text = writer.format(extension)
             # If the writer returns a string or unicode object, then
             # we should write it to a filename with that extension.
             # If it doesn't, then it's assumed that the write took
@@ -369,7 +384,7 @@ class Meeting(MeetingCommands, object):
     def __init__(self, channel, owner, oldtopic=None,
                  filename=None, writeRawLog=False,
                  setTopic=None, sendReply=None, getRegistryValue=None):
-        self.config = Config(self)
+        self.config = Config(self, writeRawLog=writeRawLog)
         if getRegistryValue is not None:
             self._registryValue = getRegistryValue
         if sendReply is not None:
