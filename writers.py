@@ -46,8 +46,11 @@ def html(text):
     return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 rstReplaceRE = re.compile('_( |-|$)')
 def rst(text):
-    """Escapes bad sequences in reST (not implemented yet)"""
+    """Escapes bad sequences in reST"""
     return rstReplaceRE.sub(r'\_\1', text)
+def text(text):
+    """Escapes bad sequences in text (not implemented yet)"""
+    return text
 
 # wraping functions (for RST)
 class TextWrapper(textwrap.TextWrapper):
@@ -170,7 +173,9 @@ class HTML(_BaseWriter):
     <h1>%(pageTitle)s</h1>
     Meeting started by %(owner)s at %(starttime)s %(timeZone)s.
     (<a href="%(fullLogs)s">full logs</a>)<br>
-    \n\n<table border=1>
+
+
+    <table border=1>
     %(MeetingItems)s
     </table>
     Meeting ended at %(endtime)s %(timeZone)s.
@@ -183,7 +188,8 @@ class HTML(_BaseWriter):
     </ol>
     <br>
 
-    <b>Action Items, by person</b>\n<ol>
+    <b>Action Items, by person</b>
+    <ol>
     %(ActionItemsPerson)s
     </ol><br>
 
