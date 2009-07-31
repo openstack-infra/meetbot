@@ -119,6 +119,23 @@ class MeetBot(callbacks.Plugin):
             #M.save()  # now do_endmeeting in M calls the save functions
             del meeting_cache[Mkey]
 
+    def outFilter(self, irc, msg):
+        """Log outgoing messages from supybot.
+        """
+        # Gotta catch my own messages *somehow* :)
+        # Let's try this little trick...
+        if msg.command in ('PRIVMSG'):
+            # Note that we have to get our nick and network parameters
+            # in a slightly different way here, compared to doPrivmsg.
+            nick = irc.nick
+            channel = msg.args[0]
+            payload = msg.args[1]
+            Mkey = (channel,irc.network)
+            M = meeting_cache.get(Mkey, None)
+            if M is not None:
+                M.addrawline(nick, payload)
+        return msg
+
     # These are admin commands, for use by the bot owner when there
     # are many channels which may need to be independently managed.
     def listmeetings(self, irc, msg, args):

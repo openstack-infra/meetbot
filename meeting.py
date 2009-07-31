@@ -443,23 +443,11 @@ class Meeting(MeetingCommands, object):
     def addline(self, nick, line, time_=None):
         """This is the way to add lines to the Meeting object.
         """
+        linenum = self.addrawline(nick, line, time_)
+
+        if time_ is None: time_ = time.localtime()
         nick = self.config.dec(nick)
         line = self.config.dec(line)
-        self.addnick(nick)
-        line = line.strip(' \x01') # \x01 is present in ACTIONs
-        # Setting a custom time is useful when replying logs,
-        # otherwise use our current time:
-        if time_ is None: time_ = time.localtime()
-        
-        # Handle the logging of the line
-        if line[:6] == 'ACTION':
-            logline = "%s * %s %s"%(time.strftime("%H:%M:%S", time_),
-                                 nick, line[7:].strip())
-        else:
-            logline = "%s <%s> %s"%(time.strftime("%H:%M:%S", time_),
-                                 nick, line.strip())
-        self.lines.append(logline)
-        linenum = len(self.lines)
 
         # Handle any commands given in the line.
         matchobj = self.config.command_RE.match(line)
@@ -479,6 +467,26 @@ class Meeting(MeetingCommands, object):
         for writer in self.config.writers:
             if hasattr(writer, 'addline'):
                 writer.addlogline(logline)
+    def addrawline(self, nick, line, time_=None):
+        """This adds a line to the log, bypassing command execution.
+        """
+        nick = self.config.dec(nick)
+        line = self.config.dec(line)
+        self.addnick(nick)
+        line = line.strip(' \x01') # \x01 is present in ACTIONs
+        # Setting a custom time is useful when replying logs,
+        # otherwise use our current time:
+        if time_ is None: time_ = time.localtime()
+
+        # Handle the logging of the line
+        if line[:6] == 'ACTION':
+            logline = "%s * %s %s"%(time.strftime("%H:%M:%S", time_),
+                                 nick, line[7:].strip())
+        else:
+            logline = "%s <%s> %s"%(time.strftime("%H:%M:%S", time_),
+                                 nick, line.strip())
+        self.lines.append(logline)
+        linenum = len(self.lines)
 
     def additem(self, m):
         """Add an item to the meeting minutes list.
