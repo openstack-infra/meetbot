@@ -320,7 +320,7 @@ class HTML2(_BaseWriter):
                     MeetingItems.append("</ol>")
                     inSublist = False
                 if haveTopic:
-                    MeetingItems.append("</li>")
+                    MeetingItems.append("<br></li>")
                 item = item
                 haveTopic = True
             else:
@@ -596,6 +596,8 @@ class Text(_BaseWriter):
         for m in M.minutes:
             item = "* "+m.text(M)
             if m.itemtype == "TOPIC":
+                if haveTopic:
+                    MeetingItems.append("")
                 item = wrapList(item, 0)
                 haveTopic = True
             else:
