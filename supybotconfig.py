@@ -127,14 +127,17 @@ def setup_config(OriginalConfig):
             continue
         attr = getattr(OriginalConfig, attrname)
         # Don't configure attributes that aren't strings.
-        if not isinstance(attr, (str, unicode)):
-            continue
-        attr = attr.replace('\n', '\\n')
-        # For a global value: conf.registerGlobalValue and remove the
-        # channel= option from registryValue call above.
-        conf.registerChannelValue(MeetBotConfigGroup, attrname,
-                                  registry.String(attr,""))
-        settable_attributes.append(attrname)
+        if isinstance(attr, (str, unicode)):
+            attr = attr.replace('\n', '\\n')
+            # For a global value: conf.registerGlobalValue and remove the
+            # channel= option from registryValue call above.
+            conf.registerChannelValue(MeetBotConfigGroup, attrname,
+                                      registry.String(attr,""))
+            settable_attributes.append(attrname)
+        if isinstance(attr, bool):
+            conf.registerChannelValue(MeetBotConfigGroup, attrname,
+                                      registry.Boolean(attr,""))
+            settable_attributes.append(attrname)
 
     # writer_map
     # (doing the commented out commands below will erase the previously
