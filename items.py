@@ -164,6 +164,8 @@ class GenericItem(_BaseItem):
 
 class Info(GenericItem):
     itemtype = 'INFO'
+    html2_template = ("""%(starthtml)s%(line)s%(endhtml)s """
+                      """(<a href='%(link)s#%(anchor)s'>%(nick)s</a>, %(time)s)""")
 class Idea(GenericItem):
     itemtype = 'IDEA'
 class Agreed(GenericItem):
@@ -187,7 +189,9 @@ class Link(_BaseItem):
         </tr>"""
     #html2_template = ("""<i>%(itemtype)s</i>: %(starthtml)s<a href="%(url)s">%(url_readable)s</a> %(line)s%(endhtml)s """
     #                  """(%(nick)s, <a href='%(link)s#%(anchor)s'>%(time)s</a>)""")
-    html2_template = ("""<i>%(itemtype)s</i>: %(starthtml)s<a href="%(url)s">%(url_readable)s</a> %(line)s%(endhtml)s """
+    #html2_template = ("""<i>%(itemtype)s</i>: %(starthtml)s<a href="%(url)s">%(url_readable)s</a> %(line)s%(endhtml)s """
+    #                  """(<a href='%(link)s#%(anchor)s'>%(nick)s</a>, %(time)s)""")
+    html2_template = ("""%(starthtml)s<a href="%(url)s">%(url_readable)s</a> %(line)s%(endhtml)s """
                       """(<a href='%(link)s#%(anchor)s'>%(nick)s</a>, %(time)s)""")
     rst_template = """*%(itemtype)s*: %(startrst)s%(url)s %(line)s%(endrst)s  (%(rstref)s_)"""
     text_template = """%(itemtype)s: %(starttext)s%(url)s %(line)s%(endtext)s  (%(nick)s, %(time)s)"""
