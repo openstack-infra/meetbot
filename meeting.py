@@ -542,5 +542,6 @@ if __name__ == '__main__':
                 line = m.group(3).strip()
                 M.addline(nick, "ACTION "+line, time_=time_)
         #M.save() # should be done by #endmeeting in the logs!
-
+    else:
+        print 'Command "%s" not found.'%sys.argv[1]
 
