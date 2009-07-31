@@ -42,6 +42,10 @@ import supybotconfig
 meeting = reload(meeting)
 supybotconfig = reload(supybotconfig)
 
+if supybotconfig.is_supybotconfig_enabled(meeting.Config):
+    supybotconfig.setup_config(meeting.Config)
+    meeting.Config = supybotconfig.get_config_proxy(meeting.Config)
+
 # By doing this, we can not lose all of our meetings across plugin
 # reloads.  But, of course, you can't change the source too
 # drastically if you do that!

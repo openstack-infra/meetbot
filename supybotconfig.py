@@ -38,9 +38,6 @@ import supybot.registry as registry
 import meeting
 import writers
 
-OriginalConfig = meeting.Config
-
-
 # The plugin group for configuration
 MeetBotConfigGroup = conf.registerPlugin('MeetBot')
 
@@ -79,6 +76,7 @@ class WriterMap(registry.String):
 class SupybotConfigProxy(object):
     def __init__(self, *args, **kwargs):
         """Do the regular default configuration, and sta"""
+        OriginalConfig = self.__OriginalConfig
         self.__C = OriginalConfig(*args, **kwargs)
     
     def __getattr__(self, attrname):
@@ -115,12 +113,14 @@ class SupybotConfigProxy(object):
 use_supybot_config = conf.registerGlobalValue(MeetBotConfigGroup,
                                               'enableSupybotBasedConfig',
                                               registry.Boolean(False, ''))
-#from fitz import interactnow
-if (use_supybot_config.value and
-    not getattr(OriginalConfig, 'dontBotConfig', False)):
+def is_supybotconfig_enabled(OriginalConfig):
+    return (use_supybot_config.value and
+            not getattr(OriginalConfig, 'dontBotConfig', False))
+
+settable_attributes = [ ]
+def setup_config(OriginalConfig):
     # Set all string variables in the default Config class as supybot
     # registry variables.
-    settable_attributes = [ ]
     for attrname in dir(OriginalConfig):
         # Don't configure attributs starting with '_'
         if attrname[0] == '_':
@@ -145,8 +145,9 @@ if (use_supybot_config.value and
                       WriterMap(OriginalConfig.writer_map, ""))
     settable_attributes.append('writer_map')
 
-
+def get_config_proxy(OriginalConfig):
     # Here is where the real proxying occurs.
-    meeting.Config = SupybotConfigProxy
+    SupybotConfigProxy._SupybotConfigProxy__OriginalConfig = OriginalConfig
+    return SupybotConfigProxy
 
 
