@@ -69,8 +69,9 @@ def replaceWRAP(item):
 
 
 class _BaseWriter(object):
-    def __init__(self, M):
+    def __init__(self, M, save_file=None, **kwargs):
         self.M = M
+        self.save_file = save_file
 
     def format(self, extension=None):
         """Override this method to implement the formatting.
@@ -126,6 +127,9 @@ class TextLog(_BaseWriter):
         M = self.M
         """Write raw text logs."""
         return "\n".join(M.lines)
+    def addline(self, line):
+        self.save_file(self.format())
+
 
 
 class HTMLlog(_BaseWriter):

@@ -95,7 +95,7 @@ class Config(object):
                          "Log:            %(urlBasename)s.log.html")
     input_codec = 'utf-8'
     output_codec = 'utf-8'
-    update_realtime = False
+    update_realtime = True
     def enc(self, text):
         return text.encode(self.output_codec, 'replace')
     def dec(self, text):
@@ -115,14 +115,27 @@ class Config(object):
         self.M = M
         self.writers = { }
 
-        if writeRawLog:
-            self.writers['.log.txt'] = writers.TextLog(self.M)
-        for extension, writer in self.writer_map.iteritems():
-            def save_file():
-                pass
-            self.writers[extension] = writer(self.M)
         if hasattr(self, "init"):
             self.init()
+
+        if writeRawLog:
+            def save_file(text, extension='.log.txt'):
+                # Don't save if meeting is already over, or configured to
+                # not update in real time.
+                if self.M._meetingIsOver or not self.update_realtime or \
+                       not hasattr(self.M, 'starttime'):
+                    return
+                self.writeToFile(text, self.filename()+extension)
+            self.writers['.log.txt'] = writers.TextLog(self.M,
+                                                       save_file=save_file)
+        for extension, writer in self.writer_map.iteritems():
+            def save_file(text, extension=extension):
+                # Don't save if meeting is already over, or configured to
+                # not update in real time.
+                if self.M._meetingIsOver or not self.update_realtime:
+                    return
+                self.writeToFile(text, self.filename()+extension)
+            self.writers[extension] = writer(self.M, save_file=save_file)
     def filename(self, url=False):
         # provide a way to override the filename.  If it is
         # overridden, it must be a full path (and the URL-part may not
@@ -464,9 +477,6 @@ class Meeting(MeetingCommands, object):
                 self.do_link(nick=nick, line=line,
                              linenum=linenum, time_=time_)
 
-        for writer in self.config.writers:
-            if hasattr(writer, 'addline'):
-                writer.addlogline(logline)
     def addrawline(self, nick, line, time_=None):
         """This adds a line to the log, bypassing command execution.
         """
@@ -487,6 +497,10 @@ class Meeting(MeetingCommands, object):
                                  nick, line.strip())
         self.lines.append(logline)
         linenum = len(self.lines)
+        for ext, writer in self.config.writers.iteritems():
+            if hasattr(writer, 'addline'):
+                writer.addline(logline)
+        return linenum
 
     def additem(self, m):
         """Add an item to the meeting minutes list.
