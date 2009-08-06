@@ -416,6 +416,12 @@ class Meeting(MeetingCommands, object):
         self.attendees = { }
         self.chairs = { }
         self._writeRawLog = writeRawLog
+        if writeRawLog:
+            # This will just get reset when the #startmeeting command
+            # runs, but I'm setting a default here to avoid a certain
+            # class of problems where an exception is raised during
+            # initialization.
+            self.starttime = time.asctime()
         self._meetingTopic = None
         self._meetingname = ""
         self._meetingIsOver = False
