@@ -421,7 +421,7 @@ class Meeting(MeetingCommands, object):
             # runs, but I'm setting a default here to avoid a certain
             # class of problems where an exception is raised during
             # initialization.
-            self.starttime = time.asctime()
+            self.starttime = time.localtime()
         self._meetingTopic = None
         self._meetingname = ""
         self._meetingIsOver = False
