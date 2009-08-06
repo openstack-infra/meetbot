@@ -49,11 +49,10 @@ if supybotconfig.is_supybotconfig_enabled(meeting.Config):
 # By doing this, we can not lose all of our meetings across plugin
 # reloads.  But, of course, you can't change the source too
 # drastically if you do that!
-try:
-    meeting_cache
-except NameError:
-    meeting_cache = {}
-    recent_meetings = [ ]
+try:               meeting_cache
+except NameError:  meeting_cache = {}
+try:               recent_meetings
+except NameError:  recent_meetings = [ ]
 
 
 class MeetBot(callbacks.Plugin):
