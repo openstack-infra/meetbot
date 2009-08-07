@@ -191,6 +191,8 @@ class Config(object):
                 text = self.enc(text)
             if isinstance(text, (str, unicode)):
                 self.writeToFile(text, rawname+extension)
+        if hasattr(self, 'save_hook'):
+            self.save_hook()
     def writeToFile(self, string, filename):
         """Write a given string to a file"""
         # The reason we have this method just for this is to proxy
