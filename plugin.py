@@ -123,16 +123,21 @@ class MeetBot(callbacks.Plugin):
         """
         # Gotta catch my own messages *somehow* :)
         # Let's try this little trick...
-        if msg.command in ('PRIVMSG'):
-            # Note that we have to get our nick and network parameters
-            # in a slightly different way here, compared to doPrivmsg.
-            nick = irc.nick
-            channel = msg.args[0]
-            payload = msg.args[1]
-            Mkey = (channel,irc.network)
-            M = meeting_cache.get(Mkey, None)
-            if M is not None:
-                M.addrawline(nick, payload)
+        try:
+            if msg.command in ('PRIVMSG'):
+                # Note that we have to get our nick and network parameters
+                # in a slightly different way here, compared to doPrivmsg.
+                nick = irc.nick
+                channel = msg.args[0]
+                payload = msg.args[1]
+                Mkey = (channel,irc.network)
+                M = meeting_cache.get(Mkey, None)
+                if M is not None:
+                    M.addrawline(nick, payload)
+        except:
+            import traceback
+            print traceback.print_exc()
+            print "(above exception in outFilter, ignoring)"
         return msg
 
     # These are admin commands, for use by the bot owner when there
