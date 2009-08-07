@@ -1,0 +1,39 @@
+#startmeeting
+this is a test line
+hi
+blah
+#topic play with chairs some
+#chair Hydroxide
+#chair h01ger
+#unchair Hydroxide
+#topic test action items
+something to say
+#action MrBeige does something
+#action h01ger and MrBeige do something else
+#action NickThatIsntHere does something
+#action MrGreen acts awesome
+#nick MrGreen
+#topic test other commands
+#info no I won't
+#idea blah
+#link http://www.debian.org
+http://www.debian.org
+/me says hi
+#topic try to cause some problems
+evil code to mess up html <b><i><u>
+#info evil code to mess up html <b><i><u>
+#nick
+#nick 
+#chair
+#chair 
+#unchair
+#info
+#info 
+#idea
+#idea 
+#topic test removing item from the minutes (nothing should be here)
+#info this shouldn't appear in the minutes
+#undo
+#endmeeting
+
+

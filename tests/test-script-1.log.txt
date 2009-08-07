@@ -1,0 +1,77 @@
+20:13:46 <MrBeige> #startmeeting
+
+20:13:50 <T-Rex> #info this command is just before the first topic
+
+20:13:50 <T-Rex> #topic Test of topics
+20:13:50 <T-Rex> #topic Second topic
+20:13:50 <T-Rex> #meetingtopic the meeting topic
+20:13:50 <T-Rex> #topic With áccents
+
+
+20:13:50 <MrBeige> #topic General command tests
+
+20:13:50 <MrBeige> #accepted we will include this new format if we so choose.
+20:13:50 <MrBeige> #rejected we will not include this new format.
+20:13:50 <MrBeige> #chair Utahraptor T-Rex not-here
+20:13:50 <MrBeige> #chair Utahraptor T-Rex
+20:13:50 <MrBeige> #nick someone-not-present
+20:13:50 <MrBeige> #chair áccents
+20:13:50 <MrBeige> #nick áccenẗs
+20:13:50 <MrBeige> #unchar not-here
+
+# all commands
+20:13:50 <MrBeige> #topic Test of all commands with different arguments
+20:13:50 <MrBeige> #topic
+20:13:50 <MrBeige> #idea
+20:13:50 <MrBeige> #info
+20:13:50 <MrBeige> #action
+20:13:50 <MrBeige> #agreed
+20:13:50 <MrBeige> #halp
+20:13:50 <MrBeige> #accepted
+20:13:50 <MrBeige> #rejected
+
+20:13:50 <MrBeige> #topic Commands with non-ascii
+20:13:50 <MrBeige> #topic    üáç€
+20:13:50 <MrBeige> #idea     üáç€
+20:13:50 <MrBeige> #info     üáç€
+20:13:50 <MrBeige> #action   üáç€
+20:13:50 <MrBeige> #agreed   üáç€
+20:13:50 <MrBeige> #halp     üáç€
+20:13:50 <MrBeige> #accepted üáç€
+20:13:50 <MrBeige> #rejected üáç€
+
+
+20:13:50 <MrBeige> #item blah
+20:13:50 <MrBeige> #idea blah
+20:13:50 <MrBeige> #action blah
+20:13:50 <Utahraptor> #agreed blah
+
+# escapes
+20:13:50 <MrBeige> #topic Escapes
+20:13:50 <Utahraptor> #nick <b>
+20:13:50 <Utahraptor> #nick **
+20:13:50 <Utahraptor> #idea blah_ blah_ ReST link reference...
+20:13:50 <ReST1_> #idea blah blah blah
+20:13:50 <ReST2_> this is some text
+20:13:50 <ReST2_> #idea under_score
+20:13:50 <Re_ST> #idea under_score
+20:13:50 <Re_ST> #idea under1_1score
+20:13:50 <Re_ST> #idea under1_score
+20:13:50 <Re_ST> #idea under_1score
+20:13:50 <Re_ST> #idea under-_score
+20:13:50 <Re_ST> #idea under_-score
+
+# links
+20:13:50 <MrBeige> #topic Links
+20:13:50 <Utahraptor> #link http://test<b>.zgib.net
+20:13:50 <Utahraptor> #link http://test.zgib.net/&testpage
+
+# accents
+20:13:50 <MrBeige> #topic Character sets
+20:13:50 <Üţáhraptõr> Nick with accents.
+20:13:50 <Üţáhraptõr> #idea Nick with accents.
+
+# actions in actions
+# 
+
+20:13:52 <MrBeige> #endmeeting

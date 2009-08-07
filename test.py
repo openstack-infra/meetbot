@@ -30,8 +30,51 @@
 
 from supybot.test import *
 
-class MeetBotTestCase(PluginTestCase):
+import os
+import sys
+
+class MeetBotTestCase(ChannelPluginTestCase):
+    channel = "#testchannel"
     plugins = ('MeetBot',)
+
+    def testRunMeeting(self):
+        test_script = file(os.path.join(os.path.dirname(__file__),
+                                        "tests/test-script-2.log.txt"))
+        for line in test_script:
+            # Normalize input lines somewhat.
+            line = line.strip()
+            if not line: continue
+            # This consists of input/output pairs we expect.  If it's
+            # not here, it's not checked for.
+            match_pairs = (('#startmeeting', 'Meeting started'),
+                           ('#endmeeting', 'Meeting ended'),
+                           ('#topic (.*)', 1),
+                           ('#meetingtopic (.*)', 1),
+                           ('#meetingname','The meeting name has been set to'),
+                           ('#chair', 'Current chairs:'),
+                           ('#unchair', 'Current chairs:'),
+                           )
+            # Run the command and get any possible output
+            reply = [ ]
+            self.feedMsg(line)
+            r = self.irc.takeMsg()
+            while r:
+                reply.append(r.args[1])
+                r = self.irc.takeMsg()
+            reply = "\n".join(reply)
+            # If our input line matches a test pattern, then insist
+            # that the output line matches the expected output
+            # pattern.
+            for test in match_pairs:
+                if re.search(test[0], line):
+                    groups = re.search(test[0], line).groups()
+                    # Output pattern depends on input pattern
+                    if isinstance(test[1], int):
+                        assert re.search(re.escape(groups[test[1]-1]),
+                                             reply), 'line "%s" gives output "%s"'%(line, reply)
+                    # Just match the given pattern.
+                    else:
+                        assert re.search(test[1], reply), 'line "%s" gives output "%s"'%(line, reply)
 
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
