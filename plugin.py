@@ -121,8 +121,9 @@ class MeetBot(callbacks.Plugin):
     def outFilter(self, irc, msg):
         """Log outgoing messages from supybot.
         """
-        # Gotta catch my own messages *somehow* :)
-        # Let's try this little trick...
+        # Catch supybot's own outgoing messages to log them.  Run the
+        # whole thing in a try: block to prevent all output from
+        # getting clobbered.
         try:
             if msg.command in ('PRIVMSG'):
                 # Note that we have to get our nick and network parameters
@@ -143,7 +144,9 @@ class MeetBot(callbacks.Plugin):
     # These are admin commands, for use by the bot owner when there
     # are many channels which may need to be independently managed.
     def listmeetings(self, irc, msg, args):
-        """List all currently-active meetings."""
+        """
+
+        List all currently-active meetings."""
         reply = ""
         reply = ", ".join(str(x) for x in sorted(meeting_cache.keys()) )
         if reply.strip() == '':
@@ -193,6 +196,10 @@ class MeetBot(callbacks.Plugin):
     deletemeeting = wrap(deletemeeting, ['admin', "channel", "something",
                                optional("boolean", True)])
     def recent(self, irc, msg, args):
+        """
+
+        List recent meetings for admin purposes.
+        """
         reply = []
         for channel, network, ctime in recent_meetings:
             Mkey = (channel,network)
