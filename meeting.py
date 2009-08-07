@@ -103,11 +103,11 @@ class Config(object):
 
     writer_map = {
         '.log.html':writers.HTMLlog,
-        '.html': writers.HTML,
-        '.2.html': writers.HTML2,
-        '.rst': writers.ReST,
+        #'.1.html': writers.HTML,
+        '.html': writers.HTML2,
+        #'.rst': writers.ReST,
         '.txt': writers.Text,
-        '.rst.html':writers.HTMLfromReST,
+        #'.rst.html':writers.HTMLfromReST,
         }
 
 
