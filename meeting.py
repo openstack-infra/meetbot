@@ -89,7 +89,8 @@ class Config(object):
               "Useful Commands: #action #agreed #halp #info #idea #link "
               "#topic.")
     endMeetingMessage = ("Meeting ended %(endtime)s %(timeZone)s.  "
-                         "Information about MeetBot at %(MeetBotInfoURL)s .\n"
+                         "Information about MeetBot at %(MeetBotInfoURL)s . "
+                         "(v %(__version__)s)\n"
                          "Minutes:        %(urlBasename)s.html\n"
                          "Minutes (text): %(urlBasename)s.txt\n"
                          "Log:            %(urlBasename)s.log.html")
@@ -240,7 +241,9 @@ class MeetingCommands(object):
         timeZone = self.config.timeZone
         chair = self.owner
         MeetBotInfoURL = self.config.MeetBotInfoURL
-        message = self.config.startMeetingMessage%locals()
+        repl = locals()
+        repl['__version__'] = __version__
+        message = self.config.startMeetingMessage%repl
         for messageline in message.split('\n'):
             self.reply(messageline)
         if line.strip():
@@ -256,7 +259,9 @@ class MeetingCommands(object):
         timeZone = self.config.timeZone
         urlBasename = self.config.filename(url=True)
         MeetBotInfoURL = self.config.MeetBotInfoURL
-        message = self.config.endMeetingMessage%locals()
+        repl = locals()
+        repl['__version__'] = __version__
+        message = self.config.endMeetingMessage%repl
         for messageline in message.split('\n'):
             self.reply(messageline)
         self._meetingIsOver = True
