@@ -119,24 +119,18 @@ class Config(object):
         if hasattr(self, "init"):
             self.init()
 
+        def save_file(text, extension):
+            # Don't save if meeting is already over, or configured to
+            # not update in real time.
+            if self.M._meetingIsOver or not hasattr(self.M, 'starttime'):
+                return
+            self.writeToFile(text, self.filename()+extension)
         if writeRawLog:
-            def save_file(text, extension='.log.txt'):
-                # Don't save if meeting is already over, or configured to
-                # not update in real time.
-                if self.M._meetingIsOver or not self.update_realtime or \
-                       not hasattr(self.M, 'starttime'):
-                    return
-                self.writeToFile(text, self.filename()+extension)
             self.writers['.log.txt'] = writers.TextLog(self.M,
-                                                       save_file=save_file)
+                 save_file=lambda text: save_file(text, extension='.log.txt'))
         for extension, writer in self.writer_map.iteritems():
-            def save_file(text, extension=extension):
-                # Don't save if meeting is already over, or configured to
-                # not update in real time.
-                if self.M._meetingIsOver or not self.update_realtime:
-                    return
-                self.writeToFile(text, self.filename()+extension)
-            self.writers[extension] = writer(self.M, save_file=save_file)
+            self.writers[extension] = writer(self.M,
+                 save_file=lambda text: save_file(text, extension=extension))
     def filename(self, url=False):
         # provide a way to override the filename.  If it is
         # overridden, it must be a full path (and the URL-part may not
@@ -510,18 +504,20 @@ class Meeting(MeetingCommands, object):
                                  nick, line.strip())
         self.lines.append(logline)
         linenum = len(self.lines)
-        for ext, writer in self.config.writers.iteritems():
-            if hasattr(writer, 'addline'):
-                writer.addline(logline)
+        if self.config.update_realtime:
+            for ext, writer in self.config.writers.iteritems():
+                if hasattr(writer, 'addline'):
+                    writer.addline(logline)
         return linenum
 
     def additem(self, m):
         """Add an item to the meeting minutes list.
         """
         self.minutes.append(m)
-        for writer in self.config.writers:
-            if hasattr(writer, 'additem'):
-                writer.additem(m)
+        if self.config.update_realtime:
+            for writer in self.config.writers:
+                if hasattr(writer, 'additem'):
+                    writer.additem(m)
 
 
 
