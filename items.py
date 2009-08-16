@@ -166,6 +166,8 @@ class Info(GenericItem):
     itemtype = 'INFO'
     html2_template = ("""%(starthtml)s%(line)s%(endhtml)s """
                       """(<a href='%(link)s#%(anchor)s'>%(nick)s</a>, %(time)s)""")
+    rst_template = """%(startrst)s%(line)s%(endrst)s  (%(rstref)s_)"""
+    text_template = """%(starttext)s%(line)s%(endtext)s  (%(nick)s, %(time)s)"""
 class Idea(GenericItem):
     itemtype = 'IDEA'
 class Agreed(GenericItem):

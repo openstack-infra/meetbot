@@ -465,6 +465,8 @@ class ReST(_BaseWriter):
         for m in M.minutes:
             item = "* "+m.rst(M)
             if m.itemtype == "TOPIC":
+                if haveTopic:
+                    MeetingItems.append("")
                 item = wrapList(item, 0)
                 haveTopic = True
             else:
