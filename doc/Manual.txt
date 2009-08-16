@@ -263,7 +263,10 @@ All of these are regular supybot commands (as opposed to the commands
 above).  That means that the supybot capability system applies, and
 they can be given either in any channel, either by direct address
 (``BotName: <command> <args> ...``) or with the bot prefix character
-(e.g. ``@<commandname> <args> ...``).
+(e.g. ``@<commandname> <args> ...``).  If there are commands with the
+same name in multiple plugins, you need to prefix the command with the
+plugin name (for example, ``BotName: meetbot recent`` instead of
+``BotName: recent``)
 
 These are restricted to anyone with the ``admin`` capability on the
 bot.
@@ -284,6 +287,11 @@ bot.
   when MeetBot becomes broken and is unable to properly save a
   meeting, rendering the ``#endmeeting`` command non-functional.
 
+``recent``
+  Display the last ten or so started meetings, along with their
+  channels.  This is useful if you are the bot admin and want to see
+  just who all is using your bot, for example to better communicate
+  with those channels.
 
 
 Hints on how to run an effective meeting
@@ -467,6 +475,14 @@ These variables are set either in ``meetingLocalConfig.py`` (in the
 ``timeZone``
     Timezone used in the bot.  Note: This will not yet work on a
     per-channel basis.  The default is ``"UTC"``
+
+``update_realtime``
+    If this is set to true (default false), then upon each line being
+    input, the ``Text`` writer will rewrite the data.  This means that
+    people joining the meeting late can catch up on what they have
+    missed.  It doesn't play will with the #meetingname command, since
+    the filename would then change during the meeting, and it doesn't
+    delete the old filename(s).
 
 ``startMeetingMessage``
 
