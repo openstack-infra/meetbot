@@ -116,8 +116,8 @@ class Config(object):
         self.M = M
         self.writers = { }
 
-        if hasattr(self, "init"):
-            self.init()
+        if hasattr(self, "init_hook"):
+            self.init_hook()
         if writeRawLog:
             self.writers['.log.txt'] = writers.TextLog(self.M)
         for extension, writer in self.writer_map.iteritems():
