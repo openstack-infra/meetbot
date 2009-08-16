@@ -60,7 +60,7 @@ def wrapList(item, indent=0):
                        subsequent_indent= ' '*(indent+2),
                        break_long_words=False).fill(item)
 def replaceWRAP(item):
-    re_wrap = re.compile('WRAP(.*)WRAP', re.DOTALL)
+    re_wrap = re.compile(r'sWRAPs(.*)eWRAPe', re.DOTALL)
     def repl(m):
         return TextWrapper(width=72, break_long_words=False).fill(m.group(1))
     return re_wrap.sub(repl, item)
@@ -103,6 +103,7 @@ class _BaseWriter(object):
                 'endtime':time.strftime("%H:%M:%S", self.M.endtime),
                 'timeZone':self.M.config.timeZone,
                 'fullLogs':self.M.config.basename+'.log.html',
+                'fullLogsFullURL':self.M.config.filename(url=True)+'.log.html',
                 'MeetBotInfoURL':self.M.config.MeetBotInfoURL,
                 'MeetBotVersion':MeetBotVersion(),
              }
@@ -411,8 +412,8 @@ class ReST(_BaseWriter):
     %(titleBlock)s
 
 
-    WRAPMeeting started by %(owner)s at %(starttime)s %(timeZone)s.
-    The `full logs`_ are available.WRAP
+    sWRAPsMeeting started by %(owner)s at %(starttime)s %(timeZone)s.
+    The `full logs`_ are available.eWRAPe
 
     .. _`full logs`: %(fullLogs)s
 
@@ -527,8 +528,8 @@ class ReST(_BaseWriter):
                      'PeoplePresent':PeoplePresent,
                      })
         body = self.body
-        body = replaceWRAP(body)
         body = body%repl
+        body = replaceWRAP(body)
         return body
 
 class HTMLfromReST(_BaseWriter):
@@ -553,10 +554,8 @@ class Text(_BaseWriter):
     %(titleBlock)s
 
 
-    WRAPMeeting started by %(owner)s at %(starttime)s %(timeZone)s.
-    The `full logs`_ are available.WRAP
-
-    .. _`full logs`: %(fullLogs)s
+    sWRAPsMeeting started by %(owner)s at %(starttime)s %(timeZone)s.
+    The full logs are available at %(fullLogsFullURL)s .eWRAPe
 
 
 
@@ -669,7 +668,7 @@ class Text(_BaseWriter):
                      'PeoplePresent':PeoplePresent,
                      })
         body = self.body
-        body = replaceWRAP(body)
         body = body%repl
+        body = replaceWRAP(body)
         return body
 
