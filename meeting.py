@@ -118,19 +118,10 @@ class Config(object):
 
         if hasattr(self, "init"):
             self.init()
-
-        def save_file(text, extension):
-            # Don't save if meeting is already over, or configured to
-            # not update in real time.
-            if self.M._meetingIsOver or not hasattr(self.M, 'starttime'):
-                return
-            self.writeToFile(text, self.filename()+extension)
         if writeRawLog:
-            self.writers['.log.txt'] = writers.TextLog(self.M,
-                 save_file=lambda text: save_file(text, extension='.log.txt'))
+            self.writers['.log.txt'] = writers.TextLog(self.M)
         for extension, writer in self.writer_map.iteritems():
-            self.writers[extension] = writer(self.M,
-                 save_file=lambda text: save_file(text, extension=extension))
+            self.writers[extension] = writer(self.M)
     def filename(self, url=False):
         # provide a way to override the filename.  If it is
         # overridden, it must be a full path (and the URL-part may not
@@ -164,18 +155,32 @@ class Config(object):
     def basename(self):
         return os.path.basename(self.M.config.filename())
 
-    def save(self):
-        """Write all output files."""
+    def save(self, realtime_update=False):
+        """Write all output files.
+
+        If `realtime_update` is true, then this isn't a complete save,
+        it will only update those writers with the update_realtime
+        attribute true.  (default update_realtime=False for this method)"""
+        if realtime_update and not hasattr(self.M, 'starttime'):
+            return
         rawname = self.filename()
         # We want to write the rawlog (.log.txt) first in case the
         # other methods break.  That way, we have saved enough to
         # replay.
-        writers = self.writers.copy()
-        if '.log.txt' in writers:
-            text = writers['.log.txt'].format('.log.txt')
-            self.writeToFile(self.enc(text), rawname+'.log.txt')
-            del writers['.log.txt']
-        for extension, writer in self.writers.iteritems():
+        writer_names = list(self.writers.keys())
+        if '.log.txt' in writer_names:
+            writer_names.remove('.log.txt')
+            writer_names = ['.log.txt'] + writer_names
+        for extension in writer_names:
+            writer = self.writers[extension]
+            # Why this?  If this is a realtime (step-by-step) update,
+            # then we only want to update those writers which say they
+            # should be updated step-by-step.
+            if (realtime_update and
+                ( not getattr(writer, 'update_realtime', False) or
+                  getattr(self, '_filename', None) )
+                ):
+                continue
             text = writer.format(extension)
             # If the writer returns a string or unicode object, then
             # we should write it to a filename with that extension.
@@ -187,7 +192,7 @@ class Config(object):
             if isinstance(text, (str, unicode)):
                 self.writeToFile(text, rawname+extension)
         if hasattr(self, 'save_hook'):
-            self.save_hook()
+            self.save_hook(realtime_update=realtime_update)
     def writeToFile(self, string, filename):
         """Write a given string to a file"""
         # The reason we have this method just for this is to proxy
@@ -417,12 +422,6 @@ class Meeting(MeetingCommands, object):
         self.attendees = { }
         self.chairs = { }
         self._writeRawLog = writeRawLog
-        if writeRawLog:
-            # This will just get reset when the #startmeeting command
-            # runs, but I'm setting a default here to avoid a certain
-            # class of problems where an exception is raised during
-            # initialization.
-            self.starttime = time.localtime()
         self._meetingTopic = None
         self._meetingname = ""
         self._meetingIsOver = False
@@ -457,8 +456,8 @@ class Meeting(MeetingCommands, object):
     def isChair(self, nick):
         """Is the nick a chair?"""
         return (nick == self.owner  or  nick in self.chairs)
-    def save(self):
-        self.config.save()
+    def save(self, **kwargs):
+        self.config.save(**kwargs)
     # Primary enttry point for new lines in the log:
     def addline(self, nick, line, time_=None):
         """This is the way to add lines to the Meeting object.
@@ -483,6 +482,7 @@ class Meeting(MeetingCommands, object):
             if line.split('//')[0] in self.config.UrlProtocols:
                 self.do_link(nick=nick, line=line,
                              linenum=linenum, time_=time_)
+        self.save(realtime_update=True)
 
     def addrawline(self, nick, line, time_=None):
         """This adds a line to the log, bypassing command execution.
@@ -504,20 +504,12 @@ class Meeting(MeetingCommands, object):
                                  nick, line.strip())
         self.lines.append(logline)
         linenum = len(self.lines)
-        if self.config.update_realtime:
-            for ext, writer in self.config.writers.iteritems():
-                if hasattr(writer, 'addline'):
-                    writer.addline(logline)
         return linenum
 
     def additem(self, m):
         """Add an item to the meeting minutes list.
         """
         self.minutes.append(m)
-        if self.config.update_realtime:
-            for writer in self.config.writers:
-                if hasattr(writer, 'additem'):
-                    writer.additem(m)
 
 
 
