@@ -203,12 +203,12 @@ class Link(_BaseItem):
         self.url, self.line = (line+' ').split(' ', 1)
         # URL-sanitization
         self.url_readable = self.url # readable line version
-        self.url = self.url.replace('"', "%22")
-        # readable line satitization:
-        self.line = writers.html(self.line.strip())
+        self.url = self.url
+        self.line = self.line.strip()
     def _htmlrepl(self, M):
         repl = self.get_replacements(escapewith=writers.html)
-        repl['url'] = writers.html(self.url)
+        # special: replace doublequote only for the URL.
+        repl['url'] = writers.html(self.url.replace('"', "%22"))
         repl['url_readable'] = writers.html(self.url)
         repl['link'] = self.logURL(M)
         return repl
