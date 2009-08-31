@@ -86,7 +86,7 @@ class Config(object):
     startMeetingMessage = ("Meeting started %(starttime)s %(timeZone)s.  "
               "The chair is %(chair)s. Information about MeetBot at "
               "%(MeetBotInfoURL)s.\n"
-              "Useful Commands: #action #agreed #halp #info #idea #link "
+              "Useful Commands: #action #agreed #help #info #idea #link "
               "#topic.")
     endMeetingMessage = ("Meeting ended %(endtime)s %(timeZone)s.  "
                          "Information about MeetBot at %(MeetBotInfoURL)s . "
@@ -372,11 +372,11 @@ class MeetingCommands(object):
         """Add informational item to the minutes."""
         m = items.Idea(**kwargs)
         self.additem(m)
-    def do_halp(self, **kwargs):
-        """Add call for halp to the minutes."""
-        m = items.Halp(**kwargs)
+    def do_help(self, **kwargs):
+        """Add call for help to the minutes."""
+        m = items.Help(**kwargs)
         self.additem(m)
-    do_help = do_halp
+    do_halp = do_help
     def do_nick(self, nick, line, **kwargs):
         """Make meetbot aware of a nick which hasn't said anything.
 

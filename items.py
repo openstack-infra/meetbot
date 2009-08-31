@@ -174,8 +174,8 @@ class Agreed(GenericItem):
     itemtype = 'AGREED'
 class Action(GenericItem):
     itemtype = 'ACTION'
-class Halp(GenericItem):
-    itemtype = 'HALP'
+class Help(GenericItem):
+    itemtype = 'HELP'
 class Accepted(GenericItem):
     itemtype = 'ACCEPTED'
     starthtml = '<font color="green">'
