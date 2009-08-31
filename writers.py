@@ -184,6 +184,19 @@ class HTMLlog(_BaseWriter):
                          out, count=1)
         return out
 
+html_template = textwrap.dedent('''\
+    <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+    <html>
+    <head>
+    <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+    <title>%(pageTitle)s</title>
+    %(headExtra)s</head>
+
+    <body>
+    %(body)s
+    </body></html>
+    ''')
+
 
 class HTML(_BaseWriter):
 
