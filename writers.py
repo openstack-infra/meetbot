@@ -167,6 +167,21 @@ class HTMLlog(_BaseWriter):
         lexer = Lexer()
         #from rkddp.interact import interact ; interact()
         out = pygments.highlight("\n".join(M.lines), lexer, formatter)
+        # Hack it to add "pre { white-space: pre-wrap; }", which make
+        # it wrap the pygments html logs.  I think that in a newer
+        # version of pygmetns, the "prestyles" HTMLFormatter option
+        # would do this, but I want to maintain compatibility with
+        # lenny.  Thus, I do these substitution hacks to add the
+        # format in.  Thanks to a comment on the blog of Francis
+        # Giannaros (http://francis.giannaros.org) for the suggestion
+        # and instructions for how.
+        out,n = re.subn(r"(\n\s*pre\s*\{[^}]+;\s*)(\})",
+                        r"\1\n      white-space: pre-wrap;\2",
+                        out, count=1)
+        if n == 0:
+            out = re.sub(r"(\n\s*</style>)",
+                         r"\npre { white-space: pre-wrap; }\1",
+                         out, count=1)
         return out
 
 
