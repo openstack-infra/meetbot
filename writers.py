@@ -335,6 +335,9 @@ class HTML2(_BaseWriter):
                 haveTopic = True
             else:
                 if not inSublist:
+                    if not haveTopic:
+                        MeetingItems.append('<li>')
+                        haveTopic = True
                     MeetingItems.append('<ol type="a">')
                     inSublist = True
                 if haveTopic: item = wrapList(item, 2)+"</li>"
@@ -374,6 +377,10 @@ class HTML2(_BaseWriter):
             if headerPrinted:
                 ActionItemsPerson.append("  </ol></li>")
         # unassigned items:
+        if len(ActionItemsPerson) == 0:
+            doActionItemsPerson = False
+        else:
+            doActionItemsPerson = True
         ActionItemsPerson.append("  <li><b>UNASSIGNED</b><ol>")
         numberUnassigned = 0
         for m in self.iterActionItemsUnassigned():
