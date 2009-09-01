@@ -154,7 +154,7 @@ class HTMLlog(_BaseWriter):
         # object.
         formatter = HtmlFormatter(lineanchors='l',
                                   full=True, style=M.config.pygmentizeStyle,
-                                  output_encoding=self.M.config.output_codec)
+                                  outencoding=self.M.config.output_codec)
         Lexer = IrcLogsLexer
         Lexer.tokens['msg'][1:1] = \
            [ # match:   #topic commands
