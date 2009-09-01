@@ -293,6 +293,17 @@ bot.
   just who all is using your bot, for example to better communicate
   with those channels.
 
+To connect to multiple IRC networks, use the supybot ``Network``
+plugin to manage them.  First, load the ``Network`` plugin, then use
+the ``connect`` command to connect to the other network.  Finally, you
+need to tell supybot to join channels on the new.  To do
+that, you can use ``network command <other_network> join <channel>``.
+(Alternatively, you can /msg the bot through the other network, but
+you'll have to register your nick to it on the other network in order
+for it to accept commands from you.)
+
+
+
 
 Hints on how to run an effective meeting
 ========================================
