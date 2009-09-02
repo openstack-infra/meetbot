@@ -184,6 +184,108 @@ class HTMLlog(_BaseWriter):
                          out, count=1)
         return out
 
+class HTMLlog2(_BaseWriter):
+    def format(self, extension=None):
+        """Write pretty HTML logs."""
+        M = self.M
+        lines = [ ]
+        line_re = re.compile(r"""\s*
+            (?P<time> \[?[0-9:\s]*\]?)\s*
+            (?P<nick>\s+<[@+\s]?[^>]+>)\s*
+            (?P<line>.*)
+        """, re.VERBOSE)
+        action_re = re.compile(r"""\s*
+            (?P<time> \[?[0-9:\s]*\]?)\s*
+            (?P<nick>\*\s+[@+\s]?[^\s]+)\s*
+            (?P<line>.*)
+        """,re.VERBOSE)
+        command_re = re.compile(r"(#[^\s]+[ \t\f\v]*)(.*)")
+        command_topic_re = re.compile(r"(#topic[ \t\f\v]*)(.*)")
+        hilight_re = re.compile(r"([^\s]+:)( .*)")
+        lineNumber = 0
+        for l in M.lines:
+            lineNumber += 1  # starts from 1
+            # is it a regular line?
+            m = line_re.match(l)
+            if m is not None:
+                line = m.group('line')
+                # Match #topic
+                m2 = command_topic_re.match(line)
+                if m2 is not None:
+                    outline = ('<span class="topic">%s</span>'
+                               '<span class="topicline">%s</span>'%
+                               (html(m2.group(1)),html(m2.group(2))))
+                # Match other #commands
+                if m2 is None:
+                  m2 = command_re.match(line)
+                  if m2 is not None:
+                    outline = ('<span class="cmd">%s</span>'
+                               '<span class="cmdline">%s</span>'%
+                               (html(m2.group(1)),html(m2.group(2))))
+                # match hilights
+                if m2 is None:
+                  m2 = hilight_re.match(line)
+                  if m2 is not None:
+                    outline = ('<span class="hi">%s</span>'
+                               '%s'%
+                               (html(m2.group(1)),html(m2.group(2))))
+                if m2 is None:
+                    outline = html(line)
+                lines.append('<a name="l-%(lineno)s"></a>'
+                             '<span class="tm">%(time)s</span>'
+                             '<span class="nk">%(nick)s</span> '
+                             '%(line)s'%{'lineno':lineNumber,
+                                         'time':html(m.group('time')),
+                                         'nick':html(m.group('nick')),
+                                         'line':outline,})
+                continue
+            m = action_re.match(l)
+            # is it a action line?
+            if m is not None:
+                lines.append('<a name="l-%(lineno)s"></a>'
+                             '<span class="tm">%(time)s</span>'
+                             '<span class="nka">%(nick)s</span> '
+                             '<span class="ac">%(line)s</span>'%
+                               {'lineno':lineNumber,
+                                'time':html(m.group('time')),
+                                'nick':html(m.group('nick')),
+                                'line':html(m.group('line')),})
+                continue
+            print l
+            print m.groups()
+            print "**error**", l
+
+        css = textwrap.dedent('''\
+        pre { /*line-height: 125%;*/
+              white-space: pre-wrap; }
+        body  { background: #f0f0f0; }
+
+        body .tm { color: #007020 }                      /* time */
+        body .nk { color: #062873; font-weight: bold }   /* nick, regular */
+        body .nka { color: #007020; font-weight: bold }  /* action nick */
+        body .ac { color: #00A000 }                      /* action line */
+        body .hi { color: #4070a0 }                 /* hilights */
+
+        /* Things to make particular MeetBot commands stick out */
+        body .topic { color: #007020; font-weight: bold }
+        body .topicline { color: #000080; font-weight: bold }
+        body .cmd { color: #007020; font-weight: bold }
+        body .cmdline { font-weight: bold }
+        ''')
+        css_head = textwrap.dedent('''\
+            <style type="text/css">
+            %s
+            </style>
+            ''')
+        return html_template%{'pageTitle':"%s log"%html(M.channel),
+                              #'body':"<br>\n".join(lines),
+                              'body':"<pre>"+("\n".join(lines))+"</pre>",
+                              'headExtra':css_head%css,
+                              }
+HTMLlog = HTMLlog2
+
+
+
 html_template = textwrap.dedent('''\
     <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
     <html>
