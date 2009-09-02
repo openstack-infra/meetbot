@@ -101,12 +101,17 @@ class Topic(_BaseItem):
         </tr>"""
     #html2_template = ("""<b>%(starthtml)s%(topic)s%(endhtml)s</b> """
     #                  """(%(nick)s, <a href='%(link)s#%(anchor)s'>%(time)s</a>)""")
-    html2_template = ("""<b>%(starthtml)s%(topic)s%(endhtml)s</b> """
-                      """(<a href='%(link)s#%(anchor)s'>%(nick)s</a>, %(time)s)""")
+    html2_template = ("""%(starthtml)s%(topic)s%(endhtml)s """
+                      """<span class="details">"""
+                      """(<a href='%(link)s#%(anchor)s'>%(nick)s</a>, """
+                      """%(time)s)"""
+                      """</span>""")
     rst_template = """%(startrst)s%(topic)s%(endrst)s  (%(rstref)s_)"""
     text_template = """%(starttext)s%(topic)s%(endtext)s  (%(nick)s, %(time)s)"""
     startrst = '**'
     endrst = '**'
+    starthtml = '<b class="TOPIC">'
+    endhtml = '</b>'
     def __init__(self, nick, line, linenum, time_):
         self.nick = nick ; self.topic = line ; self.linenum = linenum
         self.time = time.strftime("%H:%M:%S", time_)
@@ -136,8 +141,13 @@ class GenericItem(_BaseItem):
         </tr>"""
     #html2_template = ("""<i>%(itemtype)s</i>: %(starthtml)s%(line)s%(endhtml)s """
     #                  """(%(nick)s, <a href='%(link)s#%(anchor)s'>%(time)s</a>)""")
-    html2_template = ("""<i>%(itemtype)s</i>: %(starthtml)s%(line)s%(endhtml)s """
-                      """(<a href='%(link)s#%(anchor)s'>%(nick)s</a>, %(time)s)""")
+    html2_template = ("""<i class="itemtype">%(itemtype)s</i>: """
+                      """<span class="%(itemtype)s">"""
+                      """%(starthtml)s%(line)s%(endhtml)s</span> """
+                      """<span class="details">"""
+                      """(<a href='%(link)s#%(anchor)s'>%(nick)s</a>, """
+                      """%(time)s)"""
+                      """</span>""")
     rst_template = """*%(itemtype)s*: %(startrst)s%(line)s%(endrst)s  (%(rstref)s_)"""
     text_template = """%(itemtype)s: %(starttext)s%(line)s%(endtext)s  (%(nick)s, %(time)s)"""
     def __init__(self, nick, line, linenum, time_):
@@ -164,8 +174,12 @@ class GenericItem(_BaseItem):
 
 class Info(GenericItem):
     itemtype = 'INFO'
-    html2_template = ("""%(starthtml)s%(line)s%(endhtml)s """
-                      """(<a href='%(link)s#%(anchor)s'>%(nick)s</a>, %(time)s)""")
+    html2_template = ("""<span class="%(itemtype)s">"""
+                      """%(starthtml)s%(line)s%(endhtml)s</span> """
+                      """<span class="details">"""
+                      """(<a href='%(link)s#%(anchor)s'>%(nick)s</a>, """
+                      """%(time)s)"""
+                      """</span>""")
     rst_template = """%(startrst)s%(line)s%(endrst)s  (%(rstref)s_)"""
     text_template = """%(starttext)s%(line)s%(endtext)s  (%(nick)s, %(time)s)"""
 class Idea(GenericItem):
@@ -194,7 +208,10 @@ class Link(_BaseItem):
     #html2_template = ("""<i>%(itemtype)s</i>: %(starthtml)s<a href="%(url)s">%(url_readable)s</a> %(line)s%(endhtml)s """
     #                  """(<a href='%(link)s#%(anchor)s'>%(nick)s</a>, %(time)s)""")
     html2_template = ("""%(starthtml)s<a href="%(url)s">%(url_readable)s</a> %(line)s%(endhtml)s """
-                      """(<a href='%(link)s#%(anchor)s'>%(nick)s</a>, %(time)s)""")
+                      """<span class="details">"""
+                      """(<a href='%(link)s#%(anchor)s'>%(nick)s</a>, """
+                      """%(time)s)"""
+                      """</span>""")
     rst_template = """*%(itemtype)s*: %(startrst)s%(url)s %(line)s%(endrst)s  (%(rstref)s_)"""
     text_template = """%(itemtype)s: %(starttext)s%(url)s %(line)s%(endtext)s  (%(nick)s, %(time)s)"""
     def __init__(self, nick, line, linenum, time_):
