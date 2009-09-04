@@ -4,16 +4,12 @@ MeetBot, a supybot plugin for IRC meeting notetaking
 
 
 
-Introduction
-============
-
 MeetBot is a plugin to the IRC bot supybot to facilitate taking of
 notes during IRC meetings.  This allows you to better communicate with
 your project or groups after the IRC meeting, as well as keep the
 meeting more under control and on-topic.
 
-This manual is for user and meeting chair reference.  For installation
-support, see ``README.txt``.
+.. contents::
 
 
 
@@ -112,8 +108,11 @@ can look at the `logs`_ and `minutes`_ online.
 
 
 
+User Reference
+==============
+
 Commands
-========
+--------
 
 All commands are case-insensitive, and use the ``#`` prefix
 character.   Not all commands have output.  This might be confusing,
@@ -190,7 +189,7 @@ adjust and have MeetBot re-process the logs later.
 
 
 Less-used Commands
-==================
+------------------
 
 #meetingtopic
   Sets the "meeting topic".  This will always appear in the topic in
@@ -225,7 +224,7 @@ Less-used Commands
 
 #undo
   Remove the last item from the meeting minutes.  Only applies to
-  commands which appear in the final output.
+  commands which appear in the final output.  (Chairs only.)
 
 #restrictlogs
   When logs are saved, remove the permissions specified in the
@@ -239,7 +238,7 @@ Less-used Commands
 
 #meetingname
   Provide a friendly name which can be used as a variable in the
-  filename patterns.  For example, you can set 
+  filename patterns.  For example, you can set
   filenamePattern = '%(channel)s/%%Y/%(meetingname)s.%%F-%%H.%%M'
   to allow #meetingname to categorize multiple types of meeting
   occurring in one channel.
@@ -250,8 +249,40 @@ Less-used Commands
 
 
 
+
+Hints on how to run an effective meeting
+----------------------------------------
+
+*Please contribute to this section!*
+
+* Have an agenda.  Think about the agenda beforehand, so that
+  attendees are not tempted to jump ahead and discuss future items.
+  This will make it very hard to follow.
+* *Liberally* use the ``#action`` command, making sure to include the
+  nick of the person responsible.  It will produce an easy-to-scan
+  list of things to do, as well as a sorted-by-nick version.  This
+  will make these things more likely to get done.
+* In the same spirit, liberally use ``#info`` on important pieces of
+  data.  If you think you'll want to refer to it again, ``#info``
+  it.  Assigning someone to watch the meeting to ``#info`` other
+  people's lines (if they forget) usually pays off.
+* Don't be afraid to tell attendees to wait for a future topic to
+  discuss something.
+* Delegate where possible and have those interested discuss the
+  details after the meeting, where applicable.  No need to take
+  everyone's time if not everyone needs to decide.  (This only
+  applies to some types of meetings)
+* Sometimes one chair to manage the topic at hand, and one chair to
+  manage all people who are going off-topic, can help.
+
+
+
+
+Administrators
+==============
+
 Supybot Admin Commands
-======================
+----------------------
 
 These commands are for the bot owners to manage all meetings served by
 their bot.  The expected use of these commands is when the bot is on
@@ -305,36 +336,8 @@ for it to accept commands from you.)
 
 
 
-Hints on how to run an effective meeting
-========================================
-
-*Please contribute to this section!*
-
- * Have an agenda.  Think about the agenda beforehand, so that
-   attendees are not tempted to jump ahead and discuss future items.
-   This will make it very hard to follow.
- * *Liberally* use the ``#action`` command, making sure to include the
-   nick of the person responsible.  It will produce an easy-to-scan
-   list of things to do, as well as a sorted-by-nick version.  This
-   will make these things more likely to get done.
- * In the same spirit, liberally use ``#info`` on important pieces of
-   data.  If you think you'll want to refer to it again, ``#info``
-   it.  Assigning someone to watch the meeting to ``#info`` other
-   people's lines (if they forget) usually pays off.
- * Don't be afraid to tell attendees to wait for a future topic to
-   discuss something.
- * Delegate where possible and have those interested discuss the
-   details after the meeting, where applicable.  No need to take
-   everyone's time if not everyone needs to decide.  (This only
-   applies to some types of meetings)
- * Sometimes one chair to manage the topic at hand, and one chair to
-   manage all people who are going off-topic, can help.
-
-
-
-
 Configuration
-=============
+-------------
 
 Configuration is done by creating a file ``meetingLocalConfig.py`` in
 the plugin directory, or somewhere in your PYTHONPATH.  It works by
@@ -350,7 +353,7 @@ start supybot::
         logUrlPrefix = 'http://rkd.zgib.net/meetbot/'
 
 Two other more commonly used options are::
-        
+
         filenamePattern = '%(channel)s/%%Y/%(channel)s.%%F-%%H.%%M'
         MeetBotInfoURL = 'http://some_other_side.tld'
 
@@ -388,19 +391,18 @@ below may not be up to date)::
     ----> #endMeetingMessage, #filenamePattern, #input_codec,
           #logFileDir, #logUrlPrefix, #MeetBotInfoURL, #output_codec,
           #pygmentizeStyle, #specialChannelFilenamePattern,
-          #startMeetingMessage, #timeZone, #usefulCommands, 
+          #startMeetingMessage, #timeZone, #usefulCommands,
           enableSupybotBasedConfig, and public
 
 Setting a value for a variable::
 
-    /msg YourBot config supybot.plugins.MeetBot.logUrlPrefix ...
-    ... http://meetings.yoursite.net/
+    /msg YourBot config supybot.plugins.MeetBot.logUrlPrefix http://meetings.yoursite.net/
 
 
-At present, not all variables are exported to supybot.  All string
-variables are, as well certain other variables for which a wrapper has
-been written.  If a variable doesn't appear in the supybot registry,
-it can't be set via the registry.
+At present, not all variables are exported to supybot.  All string and
+boolean variables are, as well certain other variables for which a
+wrapper has been written.  If a variable doesn't appear in the supybot
+registry, it can't be set via the registry.
 
 If you want to disable supybot-based config for security reasons, set
 ``dontBotConfig`` to True in your custom configuration class in
@@ -567,7 +569,99 @@ Make a command alias.  Make ``#weagree`` an alias for ``#agreed``::
 	    self.M.do_weagree = self.M.do_agreed
 
 
+
+
+Developers
+==========
+
+To speak with other developers and users, please join ``#meetbot`` on
+*irc.oftc.net*.
+
+Code contributions to MeetBot are encouraged, but you probably want to
+check with others in #meetbot first to discuss general plans.
+
+Architecture
+------------
+
+MeetBot is primarily used as a supybot plugin, however, it is designed
+to not be limited to use with supybot.  Thus, there are some design
+choices which are slightly more complicated.
+
+``meeting.py`` contains the core of the MeetBot code.  Most meeting
+functionality modifications would begin here.
+
+* The ``Meeting`` and ``MeetingCommands`` are the core of the meeting
+  loop.
+* The ``Config`` class stores all of the local configuration
+  information.  An implicit subclass of this done for local
+  configuration.  A proxy is set up for the ``Config`` class to engage
+  in the supybot-based configuration (``supybotconfig.py``).
+
+``items.py`` contains MeetingItem objects of different classes.  These
+hold data about different #commands, most importantly their formatting
+information.
+
+``writers.py`` contains the code to write the output files.  It
+depends on the objects in ``items.py`` to be able to format
+themselves, and the various classes in here
+
+``plugin.py``, ``config.py``, ``test.py``, ``__init__.py`` are all
+supybot based files.  (yes, the supybot/not-supybot split is not as
+rigorous as it should be).  All of the supybot commands to interact
+with the meeting and send lines to the ``Meeting`` object are in
+``plugin.py``.  If you want to add a *supybot*-based feature, this
+would be the place to start.
+
+
+Source Control
+--------------
+
+To get a copy of the repo, the first time, use the **get** command::
+
+    darcs get http://code.zgib.net/MeetBot/                        # dev
+    darcs get http://darcs.debian.org/darcs/collab-maint/MeetBot/  # stable
+
+After that, to get code updates, use the **pull** command::
+
+    darcs get http://code.zgib.net/MeetBot/                        # dev
+    darcs get http://darcs.debian.org/darcs/collab-maint/MeetBot/  # stable
+
+Darcs truly supports "cherry-picking": you can pull patches from
+either branch at will (They will be kept synchronized enough so that
+this works).  You may skip any patches you do not desire, and pull any
+later patches as long as you have all earlier dependencies.
+
+To send code back, you can use ``darcs diff -u`` for a simple
+strategy, or you may record and send actual darcs patches.  To
+**record** darcs patches at first::
+
+    darcs record     # 1) interactively select the group of changes
+                     #    (y/n questions)
+                     # 2) Enter a patch name.  Say yes for entering a
+                     #    long coment
+                     # 3) Enter in a descriptive comment.  See other
+                     #    patches for a model, but I tend to use a
+                     #    bulleted list.
+
+The **send** command will send a patch to the developers via a HTTP
+POST::
+
+    darcs send http://code.zgib.net/MeetBot/
+
+If it is not signed with an authorized PGP key, it will be forwarded
+to the developers, and the developers can manually approve and apply
+the patch.  Developers can have their PGP key added.
+
+There are many other useful darcs commands.  Discuss on ``#meetbot``
+if you would like to find out more.
+
+The darcs **push** command is the counterpart to ``pull``, and used
+to move changes around when you have direct write access to the remote
+repository.
+
+
+
 Help and Support
 ================
 
-The channel ``#meetbot`` on irc.oftc.net is the best place to go.
+The channel ``#meetbot`` on *irc.oftc.net* is the best place to go.
