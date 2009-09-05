@@ -103,6 +103,7 @@ class MeetBot(callbacks.Plugin):
                                 writeRawLog=True,
                                 setTopic = _setTopic, sendReply = _sendReply,
                                 getRegistryValue = self.registryValue,
+                                safeMode=True
                                 )
             meeting_cache[Mkey] = M
             recent_meetings.append(

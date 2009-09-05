@@ -94,14 +94,18 @@ class Config(object):
                          "Minutes:        %(urlBasename)s.html\n"
                          "Minutes (text): %(urlBasename)s.txt\n"
                          "Log:            %(urlBasename)s.log.html")
+    # Input/output codecs.
     input_codec = 'utf-8'
     output_codec = 'utf-8'
-    update_realtime = True
+    # Functions to do the i/o conversion.
     def enc(self, text):
         return text.encode(self.output_codec, 'replace')
     def dec(self, text):
         return text.decode(self.input_codec, 'replace')
+    # Write out select logfiles
+    update_realtime = True
 
+    # This tells which writers write out which to extensions.
     writer_map = {
         '.log.html':writers.HTMLlog,
         #'.1.html': writers.HTML,
@@ -112,7 +116,7 @@ class Config(object):
         }
 
 
-    def __init__(self, M, writeRawLog=False):
+    def __init__(self, M, writeRawLog=False, safeMode=False):
         self.M = M
         self.writers = { }
 
@@ -122,6 +126,7 @@ class Config(object):
             self.writers['.log.txt'] = writers.TextLog(self.M)
         for extension, writer in self.writer_map.iteritems():
             self.writers[extension] = writer(self.M)
+        self.safeMode = safeMode
     def filename(self, url=False):
         # provide a way to override the filename.  If it is
         # overridden, it must be a full path (and the URL-part may not
@@ -402,8 +407,9 @@ class Meeting(MeetingCommands, object):
     _restrictlogs = False
     def __init__(self, channel, owner, oldtopic=None,
                  filename=None, writeRawLog=False,
-                 setTopic=None, sendReply=None, getRegistryValue=None):
-        self.config = Config(self, writeRawLog=writeRawLog)
+                 setTopic=None, sendReply=None, getRegistryValue=None,
+                 safeMode=False):
+        self.config = Config(self, writeRawLog=writeRawLog, safeMode=safeMode)
         if getRegistryValue is not None:
             self._registryValue = getRegistryValue
         if sendReply is not None:
