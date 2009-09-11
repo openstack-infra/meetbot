@@ -128,6 +128,52 @@ class _BaseWriter(object):
             if getattr(m, 'assigned', False): continue
             yield m
 
+class _CSSmanager(object):
+    _css_head = textwrap.dedent('''\
+        <style type="text/css">
+        %s
+        </style>
+        ''')
+    def getCSS(self, name):
+        cssfile = getattr(self.M.config, 'cssFile_'+name, '')
+        if cssfile.lower() == 'none':
+            # special string 'None' means no style at all
+            return ''
+        elif cssfile in ('', 'default'):
+            # default CSS file
+            css_fname = os.path.join(os.path.dirname(__file__),
+                                     'css-'+name+'-default.css')
+        else:
+            css_fname = cssfile
+        try:
+            # Stylesheet specified
+            if getattr(self.M.config, 'cssEmbed_'+name, True):
+                # external stylesheet
+                css = file(css_fname).read()
+                return self._css_head%css
+            else:
+                # linked stylesheet
+                css_head = ('''<link rel="stylesheet" type="text/css" '''
+                            '''href="%s">'''%cssfile)
+                return css_head
+        except Exception, exc:
+            if not self.M.config.safeMode:
+                raise
+            import traceback
+            traceback.print_exc()
+            print "(exception above ignored, continuing)"
+            try:
+                css_fname = os.path.join(os.path.dirname(__file__),
+                                         'css-'+name+'-default.css')
+                css = open(css_fname).read()
+                return self._css_head%css
+            except:
+                if not self.M.config.safeMode:
+                    raise
+                import traceback
+                traceback.print_exc()
+                return ''
+
 
 class TextLog(_BaseWriter):
     def format(self, extension=None):
@@ -184,7 +230,7 @@ class HTMLlog(_BaseWriter):
                          out, count=1)
         return out
 
-class HTMLlog2(_BaseWriter):
+class HTMLlog2(_BaseWriter, _CSSmanager):
     def format(self, extension=None):
         """Write pretty HTML logs."""
         M = self.M
@@ -255,32 +301,11 @@ class HTMLlog2(_BaseWriter):
             print m.groups()
             print "**error**", l
 
-        css = textwrap.dedent('''\
-        pre { /*line-height: 125%;*/
-              white-space: pre-wrap; }
-        body  { background: #f0f0f0; }
-
-        body .tm { color: #007020 }                      /* time */
-        body .nk { color: #062873; font-weight: bold }   /* nick, regular */
-        body .nka { color: #007020; font-weight: bold }  /* action nick */
-        body .ac { color: #00A000 }                      /* action line */
-        body .hi { color: #4070a0 }                 /* hilights */
-
-        /* Things to make particular MeetBot commands stick out */
-        body .topic { color: #007020; font-weight: bold }
-        body .topicline { color: #000080; font-weight: bold }
-        body .cmd { color: #007020; font-weight: bold }
-        body .cmdline { font-weight: bold }
-        ''')
-        css_head = textwrap.dedent('''\
-            <style type="text/css">
-            %s
-            </style>
-            ''')
+        css = self.getCSS(name='log')
         return html_template%{'pageTitle':"%s log"%html(M.channel),
                               #'body':"<br>\n".join(lines),
                               'body':"<pre>"+("\n".join(lines))+"</pre>",
-                              'headExtra':css_head%css,
+                              'headExtra':css,
                               }
 HTMLlog = HTMLlog2
 
@@ -405,7 +430,7 @@ class HTML(_BaseWriter):
 
 
 
-class HTML2(_BaseWriter):
+class HTML2(_BaseWriter, _CSSmanager):
     """HTML formatter without tables.
     """
     def meetingItems(self):
@@ -521,70 +546,6 @@ class HTML2(_BaseWriter):
         return PeoplePresent
     def heading(self, name):
         return '<h3>%s</h3>'%name
-    def css(self):
-        cssfile = getattr(self.M.config, 'cssfile', '')
-        css_head = textwrap.dedent('''\
-            <style type="text/css">
-            %s
-            </style>
-            ''')
-        if cssfile == 'None':
-            # special string 'None' means no style at all
-            return ''
-        elif cssfile in ('', 'default'):
-            # default stylesheet
-            css = self.css_template
-            return css_head%css
-        else:
-            # external stylesheet
-            if getattr(self.M.config, 'embedStylesheet', True):
-                css = file(self.M.config.cssfile).read()
-                return css_head%css
-            else:
-                # linked stylesheet
-                css_head = ('''<link rel="stylesheet" type="text/css" '''
-                            '''href="%s">'''%cssfile)
-        return css_head
-
-    css_template = textwrap.dedent("""\
-    body {
-        font-family: Helvetica, sans-serif;
-        font-size:14px;
-    }
-    h1 {
-        text-align: center;
-    }
-    a {
-        color:navy;
-        text-decoration: none;
-        border-bottom:1px dotted navy;
-    }
-    a:hover {
-        text-decoration:none;
-        border-bottom: 0;
-        color:#0000B9;
-    }
-    hr {
-        border: 1px solid #ccc;
-    }
-    /* The (nick, time) item pairs, and other body text things. */
-    .details {
-        font-size: 12px;
-        font-weight:bold;
-    }
-    /* The 'AGREED:', 'IDEA', etc, prefix to lines. */
-    .itemtype {
-        font-style: normal;    /* un-italics it */
-        font-weight: bold;
-    }
-    /* Example: change single item types.  Capitalized command name.
-    /*.TOPIC {
-        color:navy;
-    }*/
-    /*.AGREED {
-         color:lime;
-    }*/
-    """)
 
     def format(self, extension=None):
         """Write the minutes summary."""
@@ -616,8 +577,9 @@ class HTML2(_BaseWriter):
         body = replaceWRAP(body)
 
 
+        css = self.getCSS(name='minutes')
         repl.update({'body': body,
-                     'headExtra': self.css(),
+                     'headExtra': css,
                      })
         html = html_template % repl
 

@@ -104,6 +104,11 @@ class Config(object):
         return text.decode(self.input_codec, 'replace')
     # Write out select logfiles
     update_realtime = True
+    # CSS configs:
+    cssFile_log      = 'default'
+    cssEmbed_log     = True
+    cssFile_minutes  = 'default'
+    cssEmbed_minutes = True
 
     # This tells which writers write out which to extensions.
     writer_map = {
