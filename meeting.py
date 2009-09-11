@@ -34,8 +34,6 @@ import os
 import re
 import stat
 
-import pygments
-
 import writers
 import items
 reload(writers)
