@@ -535,6 +535,36 @@ logline_re = re.compile(r'\[?([0-9: ]*)\]? *<[@+]?([^>]+)> *(.*)')
 loglineAction_re = re.compile(r'\[?([0-9: ]*)\]? *\* *([^ ]+) *(.*)')
 
 
+def process_meeting(contents, channel, filename,
+                    extraConfig = {},
+                    dontSave=False,
+                    safeMode=True):
+    M = Meeting(channel=channel, owner=None,
+                filename=filename, writeRawLog=False, safeMode=safeMode)
+    if dontSave:
+        M.config.dontSave = True
+    # Update config values with anything we may have
+    for k,v in extraConfig.iteritems():
+        setattr(M.config, k, v)
+    # process all lines
+    for line in contents.split('\n'):
+        # match regular spoken lines:
+        m = logline_re.match(line)
+        if m:
+            time_ = parse_time(m.group(1).strip())
+            nick = m.group(2).strip()
+            line = m.group(3).strip()
+            if M.owner is None:
+                M.owner = nick ; M.chairs = {nick:True}
+            M.addline(nick, line, time_=time_)
+        # match /me lines
+        m = loglineAction_re.match(line)
+        if m:
+            time_ = parse_time(m.group(1).strip())
+            nick = m.group(2).strip()
+            line = m.group(3).strip()
+            M.addline(nick, "ACTION "+line, time_=time_)
+    return M
 
 # None of this is very well refined.
 if __name__ == '__main__':
