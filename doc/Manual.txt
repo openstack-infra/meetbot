@@ -521,6 +521,28 @@ These variables are set either in ``meetingLocalConfig.py`` (in the
             #'.rst.html':writers.HTMLfromRST(),
             }
 
+``cssFile_minutes`` and ``cssFile_log``
+
+    If given, this is a file containing CSS for the .html and
+    .log.html outputs (HTML2 and HTMLlog2 writers).  Embedding control
+    is described below.
+
+    If this value is the null string or 'default', then the default
+    CSS is used (see css-\*-default.css in the MeetBot distribution).
+    If this value is 'none', then no stylesheet information is written
+    whatsoever.
+
+    Note that for when embedded (see below), ``cssFile`` should be a
+    filesystem path readable locally.  When you are *not* embedding,
+    ``cssFile`` should be the URL to the stylesheet, and this value
+    given is included literally to the output.
+
+``cssEmbed_minutes`` and ``cssEmbed_log``
+
+    If these are True, then the contents of ``cssFile`` (above) are
+    read and embedded into the HTML document.  If these are False,
+    then a stylesheet link is written.
+
 
 
 Advanced Configuration
