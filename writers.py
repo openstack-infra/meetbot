@@ -516,14 +516,17 @@ class HTML2(_BaseWriter, _CSSmanager):
             doActionItemsPerson = False
         else:
             doActionItemsPerson = True
-        ActionItemsPerson.append("  <li><b>UNASSIGNED</b><ol>")
+        Unassigned = [ ]
+        Unassigned.append("  <li><b>UNASSIGNED</b><ol>")
         numberUnassigned = 0
         for m in self.iterActionItemsUnassigned():
-            ActionItemsPerson.append("    <li>%s</li>"%html(m.line))
+            Unassigned.append("    <li>%s</li>"%html(m.line))
             numberUnassigned += 1
         if numberUnassigned == 0:
-            ActionItemsPerson.append("    <li>(none)</li>")
-        ActionItemsPerson.append('  </ol>\n</li>')
+            Unassigned.append("    <li>(none)</li>")
+        Unassigned.append('  </ol>\n</li>')
+        if numberUnassigned > 1:
+            ActionItemsPerson.extend(Unassigned)
         ActionItemsPerson.append('</ol>')
         ActionItemsPerson = "\n".join(ActionItemsPerson)
 
