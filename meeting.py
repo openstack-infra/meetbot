@@ -173,6 +173,7 @@ class Config(object):
         # other methods break.  That way, we have saved enough to
         # replay.
         writer_names = list(self.writers.keys())
+        results = { }
         if '.log.txt' in writer_names:
             writer_names.remove('.log.txt')
             writer_names = ['.log.txt'] + writer_names
@@ -187,6 +188,7 @@ class Config(object):
                 ):
                 continue
             text = writer.format(extension)
+            results[extension] = text
             # If the writer returns a string or unicode object, then
             # we should write it to a filename with that extension.
             # If it doesn't, then it's assumed that the write took
@@ -198,6 +200,7 @@ class Config(object):
                 self.writeToFile(text, rawname+extension)
         if hasattr(self, 'save_hook'):
             self.save_hook(realtime_update=realtime_update)
+        return results
     def writeToFile(self, string, filename):
         """Write a given string to a file"""
         # The reason we have this method just for this is to proxy
@@ -463,7 +466,7 @@ class Meeting(MeetingCommands, object):
         """Is the nick a chair?"""
         return (nick == self.owner  or  nick in self.chairs)
     def save(self, **kwargs):
-        self.config.save(**kwargs)
+        return self.config.save(**kwargs)
     # Primary enttry point for new lines in the log:
     def addline(self, nick, line, time_=None):
         """This is the way to add lines to the Meeting object.
