@@ -197,6 +197,9 @@ class Config(object):
             if isinstance(text, unicode):
                 text = self.enc(text)
             if isinstance(text, (str, unicode)):
+                # Have a way to override saving, so no disk files are written.
+                if getattr(self, "dontSave", False):
+                    continue
                 self.writeToFile(text, rawname+extension)
         if hasattr(self, 'save_hook'):
             self.save_hook(realtime_update=realtime_update)
