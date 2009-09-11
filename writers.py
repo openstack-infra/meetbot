@@ -439,7 +439,7 @@ class HTML2(_BaseWriter, _CSSmanager):
 
         # Add all minute items to the table
         MeetingItems = [ ]
-        MeetingItems.append(self.heading('Meeting Minutes'))
+        MeetingItems.append(self.heading('Meeting summary'))
         MeetingItems.append("<ol>")
 
         haveTopic = None
@@ -601,8 +601,8 @@ class ReST(_BaseWriter):
 
 
 
-    Meeting log
-    -----------
+    Meeting summary
+    ---------------
     %(MeetingItems)s
 
     Meeting ended at %(endtime)s %(timeZone)s.
@@ -741,8 +741,8 @@ class Text(_BaseWriter):
 
 
 
-    Meeting log
-    -----------
+    Meeting summary
+    ---------------
     %(MeetingItems)s
 
     Meeting ended at %(endtime)s %(timeZone)s.
