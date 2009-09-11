@@ -2,7 +2,10 @@
 
 import os
 import sys
+import tempfile
 import unittest
+
+import meeting
 
 running_tests = True
 
@@ -33,6 +36,83 @@ class MeetBotTest(unittest.TestCase):
         finally:
             os.unlink("MeetBot")
 
+    trivial_contents = """
+    10:10:10 <x> #startmeeting
+    10:10:10 <x> blah
+    10:10:10 <x> #endmeeting
+    """
+
+    def M_trivial(self, extraConfig={}):
+        return meeting.process_meeting(contents=self.trivial_contents,
+                                       channel="#none",
+                                       filename='/dev/null',
+                                       dontSave=True,
+                                       extraConfig=extraConfig,
+                                       safeMode=False)
+
+    def t_css(self):
+        self.test_css_embed()
+        self.test_css_noembed()
+        self.test_css_file_embed()
+        self.test_css_file()
+        self.test_css_none()
+    def test_css_embed(self):
+        extraConfig={ }
+        results = self.M_trivial(extraConfig={}).save()
+        self.assert_('<link rel="stylesheet" ' not in results['.html'])
+        self.assert_('body {'                      in results['.html'])
+        self.assert_('<link rel="stylesheet" ' not in results['.log.html'])
+        self.assert_('body {'                      in results['.log.html'])
+    def test_css_noembed(self):
+        extraConfig={'cssEmbed_minutes':False,
+                     'cssEmbed_log':False,}
+        M = self.M_trivial(extraConfig=extraConfig)
+        results = M.save()
+        self.assert_('<link rel="stylesheet" '     in results['.html'])
+        self.assert_('body {'                  not in results['.html'])
+        self.assert_('<link rel="stylesheet" '     in results['.log.html'])
+        self.assert_('body {'                  not in results['.log.html'])
+    def test_css_file(self):
+        tmpf = tempfile.NamedTemporaryFile()
+        magic_string = '546uorck6o45tuo6'
+        tmpf.write(magic_string)
+        tmpf.flush()
+        extraConfig={'cssFile_minutes':  tmpf.name,
+                     'cssFile_log':      tmpf.name,}
+        M = self.M_trivial(extraConfig=extraConfig)
+        results = M.save()
+        self.assert_('<link rel="stylesheet" ' not in results['.html'])
+        self.assert_(magic_string                  in results['.html'])
+        self.assert_('<link rel="stylesheet" ' not in results['.log.html'])
+        self.assert_(magic_string                  in results['.log.html'])
+    def test_css_file_embed(self):
+        tmpf = tempfile.NamedTemporaryFile()
+        magic_string = '546uorck6o45tuo6'
+        tmpf.write(magic_string)
+        tmpf.flush()
+        extraConfig={'cssFile_minutes':  tmpf.name,
+                     'cssFile_log':      tmpf.name,
+                     'cssEmbed_minutes': False,
+                     'cssEmbed_log':     False,}
+        M = self.M_trivial(extraConfig=extraConfig)
+        results = M.save()
+        self.assert_('<link rel="stylesheet" '     in results['.html'])
+        self.assert_(tmpf.name                     in results['.html'])
+        self.assert_('<link rel="stylesheet" '     in results['.log.html'])
+        self.assert_(tmpf.name                     in results['.log.html'])
+    def test_css_none(self):
+        tmpf = tempfile.NamedTemporaryFile()
+        magic_string = '546uorck6o45tuo6'
+        tmpf.write(magic_string)
+        tmpf.flush()
+        extraConfig={'cssFile_minutes':  'none',
+                     'cssFile_log':      'none',}
+        M = self.M_trivial(extraConfig=extraConfig)
+        results = M.save()
+        self.assert_('<link rel="stylesheet" ' not in results['.html'])
+        self.assert_('<style type="text/css" ' not in results['.html'])
+        self.assert_('<link rel="stylesheet" ' not in results['.log.html'])
+        self.assert_('<style type="text/css" ' not in results['.log.html'])
 
 
 
@@ -43,5 +123,8 @@ if __name__ == '__main__':
     else:
         for testname in sys.argv[1:]:
             print testname
-            MeetBotTest(methodName='test_'+testname).debug()
+            if hasattr(MeetBotTest, testname):
+                MeetBotTest(methodName=testname).debug()
+            else:
+                MeetBotTest(methodName='test_'+testname).debug()
 
