@@ -4,7 +4,7 @@ import os
 import sys
 import unittest
 
-runing_tests = True
+running_tests = True
 
 class MeetBotTest(unittest.TestCase):
 
