@@ -35,15 +35,13 @@ class MeetBotTest(unittest.TestCase):
 
 
 
+
 if __name__ == '__main__':
-    os.chdir(os.path.join(os.path.dirname(__file__), '.'))
-    unittest.main()
-
-
-
-
-
-
-
-
+    if len(sys.argv) <= 1:
+        os.chdir(os.path.join(os.path.dirname(__file__), '.'))
+        unittest.main()
+    else:
+        for testname in sys.argv[1:]:
+            print testname
+            MeetBotTest(methodName='test_'+testname).debug()
 
