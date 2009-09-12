@@ -8,6 +8,7 @@ import unittest
 import meeting
 
 running_tests = True
+os.environ['MEETBOT_RUNNING_TESTS'] = '1'
 
 class MeetBotTest(unittest.TestCase):
 

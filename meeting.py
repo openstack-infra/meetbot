@@ -234,6 +234,10 @@ time.tzset()
 
 # load custom local configurations
 try:
+    import __main__
+    if getattr(__main__, 'running_tests', False): raise ImportError
+    if 'MEETBOT_RUNNING_TESTS' in os.environ: raise ImportError
+
     import meetingLocalConfig
     meetingLocalConfig = reload(meetingLocalConfig)
     if hasattr(meetingLocalConfig, 'Config'):
