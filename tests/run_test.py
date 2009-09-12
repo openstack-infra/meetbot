@@ -6,6 +6,7 @@ import tempfile
 import unittest
 
 import meeting
+import writers
 
 running_tests = True
 os.environ['MEETBOT_RUNNING_TESTS'] = '1'
@@ -44,15 +45,43 @@ class MeetBotTest(unittest.TestCase):
     10:10:10 <x> #endmeeting
     """
 
-    def M_trivial(self, extraConfig={}):
-        return meeting.process_meeting(contents=self.trivial_contents,
+    full_writer_map = {
+        '.log.txt':     writers.TextLog,
+        '.log.1.html':  writers.HTMLlog1,
+        '.log.html':    writers.HTMLlog2,
+        '.1.html':      writers.HTML1,
+        '.html':        writers.HTML2,
+        '.rst':         writers.ReST,
+        '.rst.html':    writers.HTMLfromReST,
+        '.txt':         writers.Text,
+        }
+
+    def M_trivial(self, contents=None, extraConfig={}):
+        if contents is None:
+            contents = self.trivial_contents
+        return meeting.process_meeting(contents=contents,
                                        channel="#none",
                                        filename='/dev/null',
                                        dontSave=True,
                                        extraConfig=extraConfig,
                                        safeMode=False)
 
+    def test_script_1(self):
+        meeting.process_meeting(contents=file('test-script-1.log.txt').read(),
+                                channel="#none",  filename='/dev/null',
+                                dontSave=True, safeMode=False,
+                                extraConfig={
+                                         'writer_map':self.full_writer_map})
+    #def test_script_3(self):
+    #   meeting.process_meeting(contents=file('test-script-3.log.txt').read(),
+    #                            channel="#none",  filename='/dev/null',
+    #                            dontSave=True, safeMode=False,
+    #                            extraConfig={
+    #                                     'writer_map':self.full_writer_map})
+
     def t_css(self):
+        """Runs all CSS-related tests.
+        """
         self.test_css_embed()
         self.test_css_noembed()
         self.test_css_file_embed()
@@ -119,8 +148,8 @@ class MeetBotTest(unittest.TestCase):
 
 
 if __name__ == '__main__':
+    os.chdir(os.path.join(os.path.dirname(__file__), '.'))
     if len(sys.argv) <= 1:
-        os.chdir(os.path.join(os.path.dirname(__file__), '.'))
         unittest.main()
     else:
         for testname in sys.argv[1:]:
