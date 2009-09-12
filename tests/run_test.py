@@ -34,6 +34,7 @@ class MeetBotTest(unittest.TestCase):
             output = os.popen("supybot-test ./MeetBot 2>&1").read()
             print output
             assert 'FAILED' not in output, "supybot-based tests failed."
+            assert '\nOK\n'     in output, "supybot-based tests failed."
         finally:
             os.unlink("MeetBot")
 
