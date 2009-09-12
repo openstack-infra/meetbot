@@ -687,14 +687,18 @@ class ReST(_BaseWriter):
                 ActionItemsPerson.append(wrapList("* %s"%rst(m.line), 2))
                 m.assigned = True
         # unassigned items:
-        ActionItemsPerson.append("* **UNASSIGNED**")
+        Unassigned = [ ]
+        Unassigned.append("* **UNASSIGNED**")
         numberUnassigned = 0
         for m in M.minutes:
             if m.itemtype != "ACTION": continue
             if getattr(m, 'assigned', False): continue
-            ActionItemsPerson.append(wrapList("* %s"%rst(m.line), 2))
+            Unassigned.append(wrapList("* %s"%rst(m.line), 2))
             numberUnassigned += 1
-        if numberUnassigned == 0: ActionItemsPerson.append("  * (none)")
+        if numberUnassigned == 0:
+            Unassigned.append("  * (none)")
+        if numberUnassigned > 1:
+            ActionItemsPerson.extend(Unassigned)
         ActionItemsPerson = "\n\n".join(ActionItemsPerson)
 
         # People Attending
@@ -827,14 +831,18 @@ class Text(_BaseWriter):
                 ActionItemsPerson.append(wrapList("* %s"%text(m.line), 2))
                 m.assigned = True
         # unassigned items:
-        ActionItemsPerson.append("* **UNASSIGNED**")
+        Unassigned = [ ]
+        Unassigned.append("* **UNASSIGNED**")
         numberUnassigned = 0
         for m in M.minutes:
             if m.itemtype != "ACTION": continue
             if getattr(m, 'assigned', False): continue
-            ActionItemsPerson.append(wrapList("* %s"%text(m.line), 2))
+            Unassigned.append(wrapList("* %s"%text(m.line), 2))
             numberUnassigned += 1
-        if numberUnassigned == 0: ActionItemsPerson.append("  * (none)")
+        if numberUnassigned == 0:
+            Unassigned.append("  * (none)")
+        if numberUnassigned > 1:
+            ActionItemsPerson.extend(Unassigned)
         ActionItemsPerson = "\n".join(ActionItemsPerson)
 
         # People Attending
