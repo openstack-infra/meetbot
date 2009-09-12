@@ -184,7 +184,7 @@ class TextLog(_BaseWriter):
 
 
 
-class HTMLlog(_BaseWriter):
+class HTMLlog1(_BaseWriter):
     def format(self, extension=None):
         """Write pretty HTML logs."""
         M = self.M
@@ -325,7 +325,7 @@ html_template = textwrap.dedent('''\
     ''')
 
 
-class HTML(_BaseWriter):
+class HTML1(_BaseWriter):
 
     body = textwrap.dedent('''\
     <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
@@ -587,6 +587,7 @@ class HTML2(_BaseWriter, _CSSmanager):
         html = html_template % repl
 
         return html
+HTML = HTML2
 
 
 class ReST(_BaseWriter):
