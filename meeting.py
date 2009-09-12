@@ -119,9 +119,13 @@ class Config(object):
         }
 
 
-    def __init__(self, M, writeRawLog=False, safeMode=False):
+    def __init__(self, M, writeRawLog=False, safeMode=False,
+                 extraConfig={}):
         self.M = M
         self.writers = { }
+        # Update config values with anything we may have
+        for k,v in extraConfig.iteritems():
+            setattr(self, k, v)
 
         if hasattr(self, "init_hook"):
             self.init_hook()
@@ -417,8 +421,10 @@ class Meeting(MeetingCommands, object):
     def __init__(self, channel, owner, oldtopic=None,
                  filename=None, writeRawLog=False,
                  setTopic=None, sendReply=None, getRegistryValue=None,
-                 safeMode=False):
-        self.config = Config(self, writeRawLog=writeRawLog, safeMode=safeMode)
+                 safeMode=False,
+                 extraConfig={}):
+        self.config = Config(self, writeRawLog=writeRawLog, safeMode=safeMode,
+                            extraConfig=extraConfig)
         if getRegistryValue is not None:
             self._registryValue = getRegistryValue
         if sendReply is not None:
@@ -543,12 +549,10 @@ def process_meeting(contents, channel, filename,
                     dontSave=False,
                     safeMode=True):
     M = Meeting(channel=channel, owner=None,
-                filename=filename, writeRawLog=False, safeMode=safeMode)
+                filename=filename, writeRawLog=False, safeMode=safeMode,
+                extraConfig=extraConfig)
     if dontSave:
         M.config.dontSave = True
-    # Update config values with anything we may have
-    for k,v in extraConfig.iteritems():
-        setattr(M.config, k, v)
     # process all lines
     for line in contents.split('\n'):
         # match regular spoken lines:
