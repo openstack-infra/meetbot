@@ -64,6 +64,8 @@ class _BaseItem(object):
     endrst = ''
     starttext = ''
     endtext = ''
+    startmw = ''
+    endmw = ''
     def get_replacements(self, escapewith):
         replacements = { }
         for name in dir(self):
@@ -108,8 +110,11 @@ class Topic(_BaseItem):
                       """</span>""")
     rst_template = """%(startrst)s%(topic)s%(endrst)s  (%(rstref)s_)"""
     text_template = """%(starttext)s%(topic)s%(endtext)s  (%(nick)s, %(time)s)"""
+    mw_template = """%(startmw)s%(topic)s%(endmw)s  (%(nick)s, %(time)s)"""
     startrst = '**'
     endrst = '**'
+    startmw = "'''"
+    endmw = "'''"
     starthtml = '<b class="TOPIC">'
     endhtml = '</b>'
     def __init__(self, nick, line, linenum, time_):
@@ -133,6 +138,9 @@ class Topic(_BaseItem):
         repl = self.get_replacements(escapewith=writers.text)
         repl['link'] = self.logURL(M)
         return self.text_template%repl
+    def mw(self, M):
+        repl = self.get_replacements(escapewith=writers.mw)
+        return self.mw_template%repl
 
 class GenericItem(_BaseItem):
     itemtype = ''
@@ -150,6 +158,7 @@ class GenericItem(_BaseItem):
                       """</span>""")
     rst_template = """*%(itemtype)s*: %(startrst)s%(line)s%(endrst)s  (%(rstref)s_)"""
     text_template = """%(itemtype)s: %(starttext)s%(line)s%(endtext)s  (%(nick)s, %(time)s)"""
+    mw_template = """''%(itemtype)s:'' %(startmw)s%(line)s%(endmw)s  (%(nick)s, %(time)s)"""
     def __init__(self, nick, line, linenum, time_):
         self.nick = nick ; self.line = line ; self.linenum = linenum
         self.time = time.strftime("%H:%M:%S", time_)
@@ -170,6 +179,9 @@ class GenericItem(_BaseItem):
         repl = self.get_replacements(escapewith=writers.text)
         repl['link'] = self.logURL(M)
         return self.text_template%repl
+    def mw(self, M):
+        repl = self.get_replacements(escapewith=writers.mw)
+        return self.mw_template%repl
 
 
 class Info(GenericItem):
@@ -182,6 +194,7 @@ class Info(GenericItem):
                       """</span>""")
     rst_template = """%(startrst)s%(line)s%(endrst)s  (%(rstref)s_)"""
     text_template = """%(starttext)s%(line)s%(endtext)s  (%(nick)s, %(time)s)"""
+    mw_template = """%(startmw)s%(line)s%(endmw)s  (%(nick)s, %(time)s)"""
 class Idea(GenericItem):
     itemtype = 'IDEA'
 class Agreed(GenericItem):
@@ -214,6 +227,7 @@ class Link(_BaseItem):
                       """</span>""")
     rst_template = """*%(itemtype)s*: %(startrst)s%(url)s %(line)s%(endrst)s  (%(rstref)s_)"""
     text_template = """%(itemtype)s: %(starttext)s%(url)s %(line)s%(endtext)s  (%(nick)s, %(time)s)"""
+    mw_template = """''%(itemtype)s:'' %(startmw)s%(url)s %(line)s%(endmw)s  (%(nick)s, %(time)s)"""
     def __init__(self, nick, line, linenum, time_):
         self.nick = nick ; self.linenum = linenum
         self.time = time.strftime("%H:%M:%S", time_)
@@ -243,3 +257,6 @@ class Link(_BaseItem):
         repl = self.get_replacements(escapewith=writers.text)
         repl['link'] = self.logURL(M)
         return self.text_template%repl
+    def mw(self, M):
+        repl = self.get_replacements(escapewith=writers.mw)
+        return self.mw_template%repl
