@@ -955,10 +955,16 @@ class MediaWiki(_BaseWriter):
         PeoplePresent = "\n".join(PeoplePresent)
         return PeoplePresent
 
-    def heading(self, name):
-        return '== %s ==\n'%name
+    def heading(self, name, level=1):
+        return '%s %s %s\n'%('='*level, name, '='*level)
 
 
+    body_start = textwrap.dedent("""\
+            %(pageTitleHeading)s
+
+            sWRAPsMeeting started by %(owner)s at %(starttime)s
+            %(timeZone)s.  The full logs are available at
+            %(fullLogsFullURL)s .eWRAPe""")
     def format(self, extension=None):
         """Return a MediaWiki formatted minutes summary."""
         M = self.M
@@ -966,16 +972,12 @@ class MediaWiki(_BaseWriter):
         # Actual formatting and replacement
         repl = self.replacements()
         repl.update({'titleBlock':('='*len(repl['pageTitle'])),
+                     'pageTitleHeading':self.heading(repl['pageTitle'],level=0)
                      })
 
 
         body = [ ]
-        body.append(textwrap.dedent("""\
-            = %(pageTitle)s =
-
-            sWRAPsMeeting started by %(owner)s at %(starttime)s
-            %(timeZone)s.  The full logs are available at
-            %(fullLogsFullURL)s .eWRAPe"""%repl))
+        body.append(self.body_start%repl)
         body.append(self.meetingItems())
         body.append(textwrap.dedent("""\
             Meeting ended at %(endtime)s %(timeZone)s."""%repl))
@@ -989,4 +991,14 @@ class MediaWiki(_BaseWriter):
         body = replaceWRAP(body)
 
         return body
+
+class PmWiki(MediaWiki, object):
+    def heading(self, name, level=1):
+        return '%s %s\n'%('!'*(level+1), name)
+    def replacements(self):
+        #repl = super(PmWiki, self).replacements(self) # fails, type checking
+        repl = MediaWiki.replacements.im_func(self)
+        repl['pageTitleHeading'] = self.heading(repl['pageTitle'],level=0)
+        return repl
+
 
