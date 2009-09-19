@@ -54,6 +54,8 @@ class MeetBotTest(unittest.TestCase):
         '.rst':         writers.ReST,
         '.rst.html':    writers.HTMLfromReST,
         '.txt':         writers.Text,
+        '.mw':          writers.MediaWiki,
+        '.pmw':         writers.PmWiki,
         }
 
     def M_trivial(self, contents=None, extraConfig={}):
