@@ -767,12 +767,16 @@ class Text(_BaseWriter):
         M = self.M
         # Action Items
         ActionItems = [ ]
+        numActionItems = 0
         ActionItems.append(self.heading('Action items'))
         for m in M.minutes:
             # The hack below is needed because of pickling problems
             if m.itemtype != "ACTION": continue
             #already escaped
             ActionItems.append(wrapList("* %s"%text(m.line), indent=0))
+            numActionItems += 1
+        if numActionItems == 0:
+            ActionItems.append("* (none)")
         ActionItems = "\n".join(ActionItems)
 
     def actionItemsPerson(self):
@@ -889,12 +893,16 @@ class MediaWiki(_BaseWriter):
         M = self.M
         # Action Items
         ActionItems = [ ]
+        numActionItems = 0
         ActionItems.append(self.heading('Action items'))
         for m in M.minutes:
             # The hack below is needed because of pickling problems
             if m.itemtype != "ACTION": continue
             #already escaped
             ActionItems.append("* %s"%mw(m.line))
+            numActionItems += 1
+        if numActionItems == 0:
+            ActionItems.append("* (none)")
         ActionItems = "\n".join(ActionItems)
         return ActionItems
 
