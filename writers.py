@@ -833,7 +833,7 @@ class Text(_BaseWriter):
 
 
     def format(self, extension=None):
-        """Return a ReStructured Text minutes summary."""
+        """Return a plain text minutes summary."""
         M = self.M
 
         # Actual formatting and replacement
