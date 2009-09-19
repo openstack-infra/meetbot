@@ -108,7 +108,7 @@ can look at the `logs`_ and `minutes`_ online.
 
 
 
-User Reference
+User reference
 ==============
 
 Commands
@@ -188,7 +188,7 @@ adjust and have MeetBot re-process the logs later.
 
 
 
-Less-used Commands
+Less-used commands
 ------------------
 
 #meetingtopic
@@ -281,7 +281,14 @@ Hints on how to run an effective meeting
 Administrators
 ==============
 
-Supybot Admin Commands
+Overview
+--------
+
+
+
+
+
+Supybot admin commands
 ----------------------
 
 These commands are for the bot owners to manage all meetings served by
@@ -371,8 +378,8 @@ the plugin in supybot --- the module is reloaded.  Specifically,
 
 
 
-Supybot-based Config
---------------------
+Supybot-based config
+~~~~~~~~~~~~~~~~~~~~
 
 In addition to the normal ``meetingLocalConfig.py`` based
 configuration, there is a mode where the supybot registry system can
@@ -410,7 +417,7 @@ If you want to disable supybot-based config for security reasons, set
 
 
 
-Required or Important Configuration
+Required or important configuration
 -----------------------------------
 
 These variables are set either in ``meetingLocalConfig.py`` (in the
@@ -450,7 +457,7 @@ These variables are set either in ``meetingLocalConfig.py`` (in the
 
 
 
-Other Config Variables
+Other config variables
 ----------------------
 
 These variables are set either in ``meetingLocalConfig.py`` (in the
@@ -545,7 +552,7 @@ These variables are set either in ``meetingLocalConfig.py`` (in the
 
 
 
-Advanced Configuration
+Advanced configuration
 ----------------------
 
 This gives a few examples of things you can do via
@@ -635,7 +642,7 @@ with the meeting and send lines to the ``Meeting`` object are in
 would be the place to start.
 
 
-Source Control
+Source control
 --------------
 
 To get a copy of the repo, the first time, use the **get** command::
@@ -683,7 +690,7 @@ repository.
 
 
 
-Help and Support
+Help and support
 ================
 
 The channel ``#meetbot`` on *irc.oftc.net* is the best place to go.
