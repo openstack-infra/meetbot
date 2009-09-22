@@ -66,17 +66,31 @@ class _BaseItem(object):
     endtext = ''
     startmw = ''
     endmw = ''
-    def get_replacements(self, escapewith):
+    def get_replacements(self, M, escapewith):
         replacements = { }
         for name in dir(self):
             if name[0] == "_": continue
             replacements[name] = getattr(self, name)
         replacements['nick'] = escapewith(replacements['nick'])
+        replacements['link'] = self.logURL(M)
         if 'line' in replacements:
             replacements['line'] = escapewith(replacements['line'])
         if 'topic' in replacements:
             replacements['topic'] = escapewith(replacements['topic'])
+        if 'url' in replacements:
+            replacements['url_quoteescaped'] = \
+                                      escapewith(self.url.replace('"', "%22"))
+
         return replacements
+    def template(self, M, escapewith):
+        template = { }
+        for k,v in self.get_replacements(M, escapewith).iteritems():
+            if k not in ('itemtype', 'line', 'topic',
+                         'url', 'url_quoteescaped',
+                         'nick', 'time', 'link', 'anchor'):
+                continue
+            template[k] = v
+        return template
     def makeRSTref(self, M):
         if self.nick[-1] == '_':
             rstref = rstref_orig = "%s%s"%(self.nick, self.time)
@@ -121,7 +135,7 @@ class Topic(_BaseItem):
         self.nick = nick ; self.topic = line ; self.linenum = linenum
         self.time = time.strftime("%H:%M:%S", time_)
     def _htmlrepl(self, M):
-        repl = self.get_replacements(escapewith=writers.html)
+        repl = self.get_replacements(M, escapewith=writers.html)
         repl['link'] = self.logURL(M)
         return repl
     def html(self, M):
@@ -130,16 +144,16 @@ class Topic(_BaseItem):
         return self.html2_template%self._htmlrepl(M)
     def rst(self, M):
         self.rstref = self.makeRSTref(M)
-        repl = self.get_replacements(escapewith=writers.rst)
+        repl = self.get_replacements(M, escapewith=writers.rst)
         if repl['topic']=='': repl['topic']=' '
         repl['link'] = self.logURL(M)
         return self.rst_template%repl
     def text(self, M):
-        repl = self.get_replacements(escapewith=writers.text)
+        repl = self.get_replacements(M, escapewith=writers.text)
         repl['link'] = self.logURL(M)
         return self.text_template%repl
     def mw(self, M):
-        repl = self.get_replacements(escapewith=writers.mw)
+        repl = self.get_replacements(M, escapewith=writers.mw)
         return self.mw_template%repl
 
 class GenericItem(_BaseItem):
@@ -163,7 +177,7 @@ class GenericItem(_BaseItem):
         self.nick = nick ; self.line = line ; self.linenum = linenum
         self.time = time.strftime("%H:%M:%S", time_)
     def _htmlrepl(self, M):
-        repl = self.get_replacements(escapewith=writers.html)
+        repl = self.get_replacements(M, escapewith=writers.html)
         repl['link'] = self.logURL(M)
         return repl
     def html(self, M):
@@ -172,15 +186,15 @@ class GenericItem(_BaseItem):
         return self.html2_template%self._htmlrepl(M)
     def rst(self, M):
         self.rstref = self.makeRSTref(M)
-        repl = self.get_replacements(escapewith=writers.rst)
+        repl = self.get_replacements(M, escapewith=writers.rst)
         repl['link'] = self.logURL(M)
         return self.rst_template%repl
     def text(self, M):
-        repl = self.get_replacements(escapewith=writers.text)
+        repl = self.get_replacements(M, escapewith=writers.text)
         repl['link'] = self.logURL(M)
         return self.text_template%repl
     def mw(self, M):
-        repl = self.get_replacements(escapewith=writers.mw)
+        repl = self.get_replacements(M, escapewith=writers.mw)
         return self.mw_template%repl
 
 
@@ -237,7 +251,7 @@ class Link(_BaseItem):
         self.url = self.url
         self.line = self.line.strip()
     def _htmlrepl(self, M):
-        repl = self.get_replacements(escapewith=writers.html)
+        repl = self.get_replacements(M, escapewith=writers.html)
         # special: replace doublequote only for the URL.
         repl['url'] = writers.html(self.url.replace('"', "%22"))
         repl['url_readable'] = writers.html(self.url)
@@ -249,14 +263,14 @@ class Link(_BaseItem):
         return self.html2_template%self._htmlrepl(M)
     def rst(self, M):
         self.rstref = self.makeRSTref(M)
-        repl = self.get_replacements(escapewith=writers.rst)
+        repl = self.get_replacements(M, escapewith=writers.rst)
         repl['link'] = self.logURL(M)
         #repl['url'] = writers.rst(self.url)
         return self.rst_template%repl
     def text(self, M):
-        repl = self.get_replacements(escapewith=writers.text)
+        repl = self.get_replacements(M, escapewith=writers.text)
         repl['link'] = self.logURL(M)
         return self.text_template%repl
     def mw(self, M):
-        repl = self.get_replacements(escapewith=writers.mw)
+        repl = self.get_replacements(M, escapewith=writers.mw)
         return self.mw_template%repl

@@ -132,6 +132,130 @@ class _BaseWriter(object):
             if getattr(m, 'assigned', False): continue
             yield m
 
+    def get_template(self, escape=lambda s: s):
+        M = self.M
+        repl = self.replacements()
+
+
+        MeetingItems = [ ]
+        # We can have initial items with NO initial topic.  This
+        # messes up the templating, so, have this null topic as a
+        # stopgap measure.
+        nextTopic = {'topic':{'itemtype':'TOPIC', 'topic':'Prologue',
+                              'nick':'',
+                              'time':'', 'link':'', 'anchor':''},
+                     'items':[] }
+        haveTopic = False
+        for m in M.minutes:
+            if m.itemtype == "TOPIC":
+                if nextTopic['topic']['nick'] or nextTopic['items']:
+                    MeetingItems.append(nextTopic)
+                nextTopic = {'topic':m.template(M, escape), 'items':[] }
+                haveTopic = True
+            else:
+                nextTopic['items'].append(m.template(M, escape))
+        MeetingItems.append(nextTopic)
+        repl['MeetingItems'] = MeetingItems
+        # Format of MeetingItems:
+        # [ {'topic': {item_dict},
+        #    'items': [item_dict, item_object, item_object, ...]
+        #    },
+        #   { 'topic':...
+        #     'items':...
+        #    },
+        #   ....
+        # ]
+        #
+        # an item_dict has:
+        # item_dict = {'itemtype': TOPIC, ACTION, IDEA, or so on...
+        #              'line': the actual line that was said
+        #              'nick': nick of who said the line
+        #              'time': 10:53:15, for example, the time
+        #              'link': ${link}#${anchor} is the URL to link to.
+        #                      (page name, and bookmark)
+        #              'anchor': see above
+        #              'topic': if itemtype is TOPIC, 'line' is not given,
+        #                      instead we have 'topic'
+        #              'url':  if itemtype is LINK, the line should be created
+        #                      by "${link} ${line}", where 'link' is the URL
+        #                      to link to, and 'line' is the rest of the line
+        #                      (that isn't a URL)
+        #              'url_quoteescaped': 'url' but with " escaped for use in
+        #                                  <a href="$url_quoteescaped">
+        ActionItems = [ ]
+        for m in M.minutes:
+            if m.itemtype != "ACTION": continue
+            ActionItems.append(escape(m.line))
+        repl['ActionItems'] = ActionItems
+        # Format of ActionItems: It's just a very simple list of lines.
+        # [line, line, line, ...]
+        # line = (string of what it is)
+
+
+        ActionItemsPerson = [ ]
+        numberAssigned = 0
+        for nick, items in self.iterActionItemsNick():
+            thisNick = {'nick':escape(nick), 'items':[ ] }
+            for m in items:
+                numberAssigned += 1
+                thisNick['items'].append(escape(m.line))
+            if len(thisNick['items']) > 0:
+                ActionItemsPerson.append(thisNick)
+        # Work on the unassigned nicks.
+        thisNick = {'nick':'UNASSIGNED', 'items':[ ] }
+        for m in self.iterActionItemsUnassigned():
+            thisNick['items'].append(escape(m.line))
+        if len(thisNick['items']) > 1:
+            ActionItemsPerson.append(thisNick)
+        if numberAssigned == 0:
+            ActionItemsPerson = None
+        repl['ActionItemsPerson'] = ActionItemsPerson
+        # Format of ActionItemsPerson
+        # ActionItemsPerson =
+        #  [ {'nick':nick_of_person,
+        #     'items': [item1, item2, item3, ...],
+        #    },
+        #   ...,
+        #   ...,
+        #    {'nick':'UNASSIGNED',
+        #     'items': [item1, item2, item3, ...],
+        #    }
+        #  ]
+
+
+        PeoplePresent = []
+        # sort by number of lines spoken
+        for nick, count in self.iterNickCounts():
+            PeoplePresent.append({'nick':escape(nick),
+                                  'count':count})
+        repl['PeoplePresent'] = PeoplePresent
+        # Format of PeoplePresent
+        # [{'nick':the_nick, 'count':count_of_lines_said},
+        #  ...,
+        #  ...,
+        # ]
+
+
+
+
+class Template(_BaseWriter):
+
+    def format(self, extension=None):
+        repl = self.get_template()
+
+        # Uncomment this line to interactively play with the "repl"
+        # replacements object, for debugging purposes
+        #from code import interact ; interact(local=locals())
+
+
+        # Add all the genshi code here
+
+
+        return ''  # This should return the final string to write
+
+
+
+
 class _CSSmanager(object):
     _css_head = textwrap.dedent('''\
         <style type="text/css">
