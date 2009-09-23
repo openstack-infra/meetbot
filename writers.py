@@ -239,7 +239,7 @@ class _BaseWriter(object):
 
 
 
-class Template(_BaseWriter):
+class HTMLTemplate(_BaseWriter):
 
     def format(self, extension=None):
         repl = self.get_template()
@@ -266,6 +266,47 @@ class Template(_BaseWriter):
             f = open(minutes_template, 'r')
 
             tmpl = MarkupTemplate(f.read())
+            stream = tmpl.generate(time=time,
+                                   meeting=meeting,
+                                   attendees=attendees,
+                                   agenda=agenda,
+                                   actions=actions,
+                                   actions_person=actions_person,
+                                   meetbot=meetbot)
+
+        finally:
+            f.close()
+
+        return stream.render()
+
+
+class TextTemplate(_BaseWriter):
+
+    def format(self, extension=None):
+        repl = self.get_template()
+
+        # Uncomment this line to interactively play with the "repl"
+        # replacements object, for debugging purposes
+        #from code import interact ; interact(local=locals())
+
+        # let's make the data structure easier to use in the template
+        time = { 'start': repl['starttime'], 'end': repl['endtime'], 'timezone': repl['timeZone'] }
+        meeting = { 'title': repl['pageTitle'], 'owner': repl['owner'], 'logs': repl['fullLogsFullURL'] }
+        attendees = [ person for person in repl['PeoplePresent'] ]
+        agenda = [ { 'topic': item['topic'], 'notes': item['items'] } for item in repl['MeetingItems'] ]
+        actions = [ action for action in repl['ActionItems'] ]
+        actions_person = [ { 'nick': attendee['nick'], 'actions': attendee['items'] } for attendee in repl['ActionItemsPerson'] ]
+        meetbot = { 'version': repl['MeetBotVersion'], 'url': repl['MeetBotInfoURL'] }
+
+        from genshi.template import NewTextTemplate
+
+        # hardcoded path to the template file might not be the best thing to do :]
+        minutes_template = 'meeting-minutes-template.txt'
+
+        try:
+            f = open(minutes_template, 'r')
+
+            tmpl = NewTextTemplate(f.read())
             stream = tmpl.generate(time=time,
                                    meeting=meeting,
                                    attendees=attendees,
