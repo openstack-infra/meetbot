@@ -1,15 +1,22 @@
 # Richard Darst, 2009
 
 import os
+import re
 import sys
 import tempfile
 import unittest
 
+os.environ['MEETBOT_RUNNING_TESTS'] = '1'
 import meeting
 import writers
 
 running_tests = True
-os.environ['MEETBOT_RUNNING_TESTS'] = '1'
+
+def process_meeting(contents, extraConfig={}):
+    return meeting.process_meeting(contents=contents,
+                                channel="#none",  filename='/dev/null',
+                                dontSave=True, safeMode=False,
+                                extraConfig=extraConfig)
 
 class MeetBotTest(unittest.TestCase):
 
@@ -19,7 +26,7 @@ class MeetBotTest(unittest.TestCase):
         sys.argv[1:] = ["replay", "test-script-1.log.txt"]
         sys.path.insert(0, "..")
         try:
-            execfile("../meeting.py", globals())
+            execfile("../meeting.py", {})
         finally:
             del sys.path[0]
 
@@ -56,30 +63,99 @@ class MeetBotTest(unittest.TestCase):
         '.txt':         writers.Text,
         '.mw':          writers.MediaWiki,
         '.pmw':         writers.PmWiki,
+        #'.tmp.txt|template=+template.txt':   writers.Template,
+        #'.tmp.html|template=+template.html': writers.Template,
         }
 
     def M_trivial(self, contents=None, extraConfig={}):
         if contents is None:
             contents = self.trivial_contents
-        return meeting.process_meeting(contents=contents,
-                                       channel="#none",
-                                       filename='/dev/null',
-                                       dontSave=True,
-                                       extraConfig=extraConfig,
-                                       safeMode=False)
+        return process_meeting(contents=contents,
+                               extraConfig=extraConfig)
 
     def test_script_1(self):
-        meeting.process_meeting(contents=file('test-script-1.log.txt').read(),
-                                channel="#none",  filename='/dev/null',
-                                dontSave=True, safeMode=False,
-                                extraConfig={
-                                         'writer_map':self.full_writer_map})
+        process_meeting(contents=file('test-script-1.log.txt').read(),
+                        extraConfig={'writer_map':self.full_writer_map})
     #def test_script_3(self):
-    #   meeting.process_meeting(contents=file('test-script-3.log.txt').read(),
-    #                            channel="#none",  filename='/dev/null',
-    #                            dontSave=True, safeMode=False,
-    #                            extraConfig={
-    #                                     'writer_map':self.full_writer_map})
+    #   process_meeting(contents=file('test-script-3.log.txt').read(),
+    #                   extraConfig={'writer_map':self.full_writer_map})
+
+    all_commands_test_contents = """
+    10:10:10 <x> #startmeeting
+    10:10:10 <x> #topic h6k4orkac
+    10:10:10 <x> #info blaoulrao
+    10:10:10 <x> #idea alrkkcao4
+    10:10:10 <x> #help ntoircoa5
+    10:10:10 <x> #link http://bnatorkcao.net kroacaonteu
+    10:10:10 <x> http://jrotjkor.net krotroun
+    10:10:10 <x> #action xrceoukrc
+    10:10:10 <x> #nick okbtrokr
+
+    # Should not appear in non-log output
+    10:10:10 <x> #idea ckmorkont
+    10:10:10 <x> #undo
+
+    # Assert that chairs can change the topic, and non-chairs can't.
+    10:10:10 <x> #chair y
+    10:10:10 <y> #topic topic_doeschange
+    10:10:10 <z> #topic topic_doesntchange
+    10:10:10 <x> #unchair y
+    10:10:10 <y> #topic topic_doesnt2change
+
+    10:10:10 <x> #endmeeting
+    """
+    def test_contents_test2(self):
+        """Ensure that certain input lines do appear in the output.
+
+        This test ensures that the input to certain commands does
+        appear in the output.
+        """
+        M = process_meeting(contents=self.all_commands_test_contents,
+                            extraConfig={'writer_map':self.full_writer_map})
+        results = M.save()
+        for name, output in results.iteritems():
+            self.assert_('h6k4orkac' in output, "Topic failed for %s"%name)
+            self.assert_('blaoulrao' in output, "Info failed for %s"%name)
+            self.assert_('alrkkcao4' in output, "Idea failed for %s"%name)
+            self.assert_('ntoircoa5' in output, "Help failed for %s"%name)
+            self.assert_('http://bnatorkcao.net' in output,
+                                                  "Link(1) failed for %s"%name)
+            self.assert_('kroacaonteu' in output, "Link(2) failed for %s"%name)
+            self.assert_('http://jrotjkor.net' in output,
+                                        "Link detection(1) failed for %s"%name)
+            self.assert_('krotroun' in output,
+                                        "Link detection(2) failed for %s"%name)
+            self.assert_('xrceoukrc' in output, "Action failed for %s"%name)
+            self.assert_('okbtrokr' in output, "Nick failed for %s"%name)
+
+            # Things which should only appear or not appear in the
+            # notes (not the logs):
+            if 'log' not in name:
+                self.assert_( 'ckmorkont' not in output,
+                              "Undo failed for %s"%name)
+                self.assert_('topic_doeschange' in output,
+                             "Chair changing topic failed for %s"%name)
+                self.assert_('topic_doesntchange' not in output,
+                             "Non-chair not changing topic failed for %s"%name)
+                self.assert_('topic_doesnt2change' not in output,
+                            "Un-chaired was able to chang topic for %s"%name)
+
+    #def test_contents_test(self):
+    #    contents = open('test-script-3.log.txt').read()
+    #    M = process_meeting(contents=file('test-script-3.log.txt').read(),
+    #                        extraConfig={'writer_map':self.full_writer_map})
+    #    results = M.save()
+    #    for line in contents.split('\n'):
+    #        m = re.search(r'#(\w+)\s+(.*)', line)
+    #        if not m:
+    #            continue
+    #        type_ = m.group(1)
+    #        text = m.group(2)
+    #        text = re.sub('[^\w]+', '', text).lower()
+    #
+    #        m2 = re.search(t2, re.sub(r'[^\w\n]', '', results['.txt']))
+    #        import fitz.interactnow
+    #        print m.groups()
 
     def t_css(self):
         """Runs all CSS-related tests.
