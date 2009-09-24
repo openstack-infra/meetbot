@@ -237,89 +237,66 @@ class _BaseWriter(object):
 
         return repl
 
-
-
-class HTMLTemplate(_BaseWriter):
-
-    def format(self, extension=None):
-        repl = self.get_template()
-
-        # Uncomment this line to interactively play with the "repl"
-        # replacements object, for debugging purposes
-        #from code import interact ; interact(local=locals())
-
+    def get_template2(self, escape=lambda s: s):
         # let's make the data structure easier to use in the template
-        time = { 'start': repl['starttime'], 'end': repl['endtime'], 'timezone': repl['timeZone'] }
-        meeting = { 'title': repl['pageTitle'], 'owner': repl['owner'], 'logs': repl['fullLogsFullURL'] }
-        attendees = [ person for person in repl['PeoplePresent'] ]
-        agenda = [ { 'topic': item['topic'], 'notes': item['items'] } for item in repl['MeetingItems'] ]
-        actions = [ action for action in repl['ActionItems'] ]
-        actions_person = [ { 'nick': attendee['nick'], 'actions': attendee['items'] } for attendee in repl['ActionItemsPerson'] ]
-        meetbot = { 'version': repl['MeetBotVersion'], 'url': repl['MeetBotInfoURL'] }
+        repl = self.get_template(escape=escape)
+        repl = {
+        'time':           { 'start': repl['starttime'], 'end': repl['endtime'], 'timezone': repl['timeZone'] },
+        'meeting':        { 'title': repl['pageTitle'], 'owner': repl['owner'], 'logs': repl['fullLogsFullURL'] },
+        'attendees':      [ person for person in repl['PeoplePresent'] ],
+        'agenda':         [ { 'topic': item['topic'], 'notes': item['items'] } for item in repl['MeetingItems'] ],
+        'actions':        [ action for action in repl['ActionItems'] ],
+        'actions_person': [ { 'nick': attendee['nick'], 'actions': attendee['items'] } for attendee in repl['ActionItemsPerson'] ],
+        'meetbot':        { 'version': repl['MeetBotVersion'], 'url': repl['MeetBotInfoURL'] },
+        }
+        return repl
 
-        from genshi.template import MarkupTemplate
 
-        # hardcoded path to the template file might not be the best thing to do :]
-        minutes_template = 'meeting-minutes-template.html'
+class Template(_BaseWriter):
+    """Format a notes file using the genshi templating engine
 
+    Send an argument template=<filename> to specify which template to
+    use.  If `template` begins in '+', then it is relative to the
+    MeetBot source directory.  Included templates are:
+      +template.html
+      +template.txt
+
+    Some examples of using these options are:
+      writer_map['.txt|template=+template.html'] = writers.Template
+      writer_map['.txt|template=/home/you/template.txt] = writers.Template
+
+    If a template ends in .txt, parse with a text-based genshi
+    templater.  Otherwise, parse with a HTML-based genshi templater.
+    """
+    def format(self, extension=None, template='+template.html'):
+        repl = self.get_template2()
+
+        # If `template` begins in '+', then it in relative to the
+        # MeetBot source directory.
+        if template[0] == '+':
+            template = os.path.join(os.path.dirname(__file__), template[1:])
+        # If we don't test here, it might fail in the try: block
+        # below, then f.close() will fail and mask the original
+        # exception
+        if not os.access(template, os.F_OK):
+            raise IOError('File not found: %s'%template)
+
+        # Do we want to use a text template or HTML ?
+        import genshi.template
+        if template[-4:] in ('.txt', '.rst'):
+            Template = genshi.template.NewTextTemplate   # plain text
+        else:
+            Template = genshi.template.MarkupTemplate    # HTML-like
+
+        # Do the actual templating work
         try:
-            f = open(minutes_template, 'r')
-
-            tmpl = MarkupTemplate(f.read())
-            stream = tmpl.generate(time=time,
-                                   meeting=meeting,
-                                   attendees=attendees,
-                                   agenda=agenda,
-                                   actions=actions,
-                                   actions_person=actions_person,
-                                   meetbot=meetbot)
-
+            f = open(template, 'r')
+            tmpl = Template(f.read())
+            stream = tmpl.generate(**repl)
         finally:
             f.close()
 
         return stream.render()
-
-
-class TextTemplate(_BaseWriter):
-
-    def format(self, extension=None):
-        repl = self.get_template()
-
-        # Uncomment this line to interactively play with the "repl"
-        # replacements object, for debugging purposes
-        #from code import interact ; interact(local=locals())
-
-        # let's make the data structure easier to use in the template
-        time = { 'start': repl['starttime'], 'end': repl['endtime'], 'timezone': repl['timeZone'] }
-        meeting = { 'title': repl['pageTitle'], 'owner': repl['owner'], 'logs': repl['fullLogsFullURL'] }
-        attendees = [ person for person in repl['PeoplePresent'] ]
-        agenda = [ { 'topic': item['topic'], 'notes': item['items'] } for item in repl['MeetingItems'] ]
-        actions = [ action for action in repl['ActionItems'] ]
-        actions_person = [ { 'nick': attendee['nick'], 'actions': attendee['items'] } for attendee in repl['ActionItemsPerson'] ]
-        meetbot = { 'version': repl['MeetBotVersion'], 'url': repl['MeetBotInfoURL'] }
-
-        from genshi.template import NewTextTemplate
-
-        # hardcoded path to the template file might not be the best thing to do :]
-        minutes_template = 'meeting-minutes-template.txt'
-
-        try:
-            f = open(minutes_template, 'r')
-
-            tmpl = NewTextTemplate(f.read())
-            stream = tmpl.generate(time=time,
-                                   meeting=meeting,
-                                   attendees=attendees,
-                                   agenda=agenda,
-                                   actions=actions,
-                                   actions_person=actions_person,
-                                   meetbot=meetbot)
-
-        finally:
-            f.close()
-
-        return stream.render()
-
 
 
 
