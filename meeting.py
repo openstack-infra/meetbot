@@ -194,7 +194,15 @@ class Config(object):
                   getattr(self, '_filename', None) )
                 ):
                 continue
-            text = writer.format(extension)
+            # Parse embedded arguments
+            if '|' in extension:
+                extension, args = extension.split('|', 1)
+                args = args.split('|')
+                args = dict([a.split('=', 1) for a in args] )
+            else:
+                args = { }
+
+            text = writer.format(extension, **args)
             results[extension] = text
             # If the writer returns a string or unicode object, then
             # we should write it to a filename with that extension.
