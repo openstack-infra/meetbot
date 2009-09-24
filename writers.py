@@ -207,8 +207,8 @@ class _BaseWriter(object):
             thisNick['items'].append(escape(m.line))
         if len(thisNick['items']) > 1:
             ActionItemsPerson.append(thisNick)
-        if numberAssigned == 0:
-            ActionItemsPerson = None
+        #if numberAssigned == 0:
+        #    ActionItemsPerson = None
         repl['ActionItemsPerson'] = ActionItemsPerson
         # Format of ActionItemsPerson
         # ActionItemsPerson =
