@@ -1124,7 +1124,7 @@ class MediaWiki(_BaseWriter):
         return PeoplePresent
 
     def heading(self, name, level=1):
-        return '%s %s %s\n'%('='*level, name, '='*level)
+        return '%s %s %s\n'%('='*(level+1), name, '='*(level+1))
 
 
     body_start = textwrap.dedent("""\
