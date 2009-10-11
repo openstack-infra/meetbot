@@ -48,8 +48,8 @@ class MeetBotTestCase(ChannelPluginTestCase):
             # not here, it's not checked for.
             match_pairs = (('#startmeeting', 'Meeting started'),
                            ('#endmeeting', 'Meeting ended'),
-                           ('#topic (.*)', 1),
-                           ('#meetingtopic (.*)', 1),
+                           ('#topic +(.*)', 1),
+                           ('#meetingtopic +(.*)', 1),
                            ('#meetingname','The meeting name has been set to'),
                            ('#chair', 'Current chairs:'),
                            ('#unchair', 'Current chairs:'),
@@ -70,11 +70,14 @@ class MeetBotTestCase(ChannelPluginTestCase):
                     groups = re.search(test[0], line).groups()
                     # Output pattern depends on input pattern
                     if isinstance(test[1], int):
-                        assert re.search(re.escape(groups[test[1]-1]),
-                                             reply), 'line "%s" gives output "%s"'%(line, reply)
+                        print groups[test[1]-1], reply
+                        assert re.search(re.escape(groups[test[1]-1]), reply),\
+                              'line "%s" gives output "%s"'%(line, reply)
                     # Just match the given pattern.
                     else:
-                        assert re.search(test[1], reply), 'line "%s" gives output "%s"'%(line, reply)
+                        print test[1], reply
+                        assert re.search(test[1], reply.decode('utf-8')), \
+                               'line "%s" gives output "%s"'%(line, reply)
 
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

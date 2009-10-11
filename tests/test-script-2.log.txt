@@ -34,6 +34,16 @@ evil code to mess up html <b><i><u>
 #topic test removing item from the minutes (nothing should be here)
 #info this shouldn't appear in the minutes
 #undo
+#topic    üñìcöde stuff
+#chair    üñìcöde
+#unchair  üñìcöde
+#info     üñìcöde
+#idea     üñìcöde
+#help     üñìcöde
+#action   üñìcöde
+#agreed   üñìcöde
+#accepted üñìcöde
+#rejected üñìcöde
 #endmeeting
 
 
