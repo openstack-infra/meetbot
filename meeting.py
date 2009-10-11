@@ -340,6 +340,10 @@ class MeetingCommands(object):
             chair = chair.strip()
             if not chair: continue
             if chair not in self.chairs:
+                if self._channelNicks is not None and \
+                       ( chair.encode(self.config.input_codec)
+                         not in self._channelNicks()):
+                    self.reply("Warning: Nick not in channel: %s"%chair)
                 self.addnick(chair, lines=0)
                 self.chairs.setdefault(chair, True)
         chairs = dict(self.chairs) # make a copy
@@ -433,7 +437,7 @@ class Meeting(MeetingCommands, object):
     def __init__(self, channel, owner, oldtopic=None,
                  filename=None, writeRawLog=False,
                  setTopic=None, sendReply=None, getRegistryValue=None,
-                 safeMode=False,
+                 safeMode=False, channelNicks=None,
                  extraConfig={}):
         self.config = Config(self, writeRawLog=writeRawLog, safeMode=safeMode,
                             extraConfig=extraConfig)
@@ -458,6 +462,7 @@ class Meeting(MeetingCommands, object):
         self._meetingTopic = None
         self._meetingname = ""
         self._meetingIsOver = False
+        self._channelNicks = channelNicks
         if filename:
             self._filename = filename
 
