@@ -10,8 +10,7 @@ ${meeting.title}
 ${heading}
 
 
-Meeting started by ${meeting.owner} at ${time.start} ${time.timezone}.  The full logs are
-available at ${meeting.logs} .
+${wrap("Meeting started by %s at %s %s. The full logs are available at %s ."%(meeting.owner, time.start, time.timezone, meeting.logs), 1)}
 
 
 
@@ -19,16 +18,19 @@ Meeting summary
 ---------------
 
 {% for item in agenda %}\
-{% choose %}\
+{% choose %}
 {% when item.topic.nick %}${wrap("* %s  (%s, %s)"%(item.topic.topic, item.topic.nick, item.topic.time), 1)}{% end %}\
 {% otherwise %}${wrap("* %s"%(item.topic.topic), 1)}{% end %}
 {% end %}\
 {% for note in item.notes %}\
-${wrap("* %s: %s  (%s, %s)"%(note.itemtype, note.line, note.nick, note.time), 2)}
+{% choose %}\
+{% when note.itemtype == 'LINK' %}${wrap("* %s: %s %s  (%s, %s)"%(note.itemtype, note.url, note.line, note.nick, note.time), 2)}{% end %}\
+{% otherwise %}${wrap("* %s: %s  (%s, %s)"%(note.itemtype, note.line, note.nick, note.time), 2)}{% end %}
+{% end %}\
+{% end %}\
 {% end %}
-{%end%}
 
-Meeting ended at ${time.end} ${time.timezone}.
+${wrap("Meeting ended at %s %s."%(time.end, time.timezone), 1)}
 
 
 

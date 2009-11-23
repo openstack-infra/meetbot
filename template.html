@@ -54,7 +54,21 @@ hr {
     <py:if test="len(item.notes) > 0">
     <li py:for="note in item.notes">
      <i class="itemtype">${note.itemtype}</i>: 
-     <span class="${note.itemtype}">${note.line}</span>
+     <py:choose>
+      <py:when test="note.itemtype == 'LINK'">
+      <span class="${note.itemtype}">
+       <a href="${note.url}">
+        <py:choose>
+         <py:when test="note.line">${note.line}</py:when>
+         <py:otherwise>${note.url}</py:otherwise>
+        </py:choose>
+       </a>
+      </span>
+      </py:when>
+      <py:otherwise>
+       <span class="${note.itemtype}">${note.line}</span>
+      </py:otherwise>
+     </py:choose>
      <span class="details">(<a href='${meeting.logs}#${note.anchor}'>${note.nick}</a>, ${note.time})</span>
     </li>
     </py:if>
