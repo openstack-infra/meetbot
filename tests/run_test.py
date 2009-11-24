@@ -63,8 +63,8 @@ class MeetBotTest(unittest.TestCase):
         '.txt':         writers.Text,
         '.mw':          writers.MediaWiki,
         '.pmw':         writers.PmWiki,
-        #'.tmp.txt|template=+template.txt':   writers.Template,
-        #'.tmp.html|template=+template.html': writers.Template,
+        '.tmp.txt|template=+template.txt':   writers.Template,
+        '.tmp.html|template=+template.html': writers.Template,
         }
 
     def M_trivial(self, contents=None, extraConfig={}):
