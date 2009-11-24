@@ -10,7 +10,7 @@ ${meeting.title}
 ${heading}
 
 
-${wrap("Meeting started by %s at %s %s. The full logs are available at %s ."%(meeting.owner, time.start, time.timezone, meeting.logs), 1)}
+${wrap("Meeting started by %s at %s %s. The full logs are available at %s ."%(meeting.owner, time.start, time.timezone, meeting.logsFullURL), 1)}
 
 
 

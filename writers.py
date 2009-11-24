@@ -242,7 +242,7 @@ class _BaseWriter(object):
         repl = self.get_template(escape=escape)
         repl = {
         'time':           { 'start': repl['starttime'], 'end': repl['endtime'], 'timezone': repl['timeZone'] },
-        'meeting':        { 'title': repl['pageTitle'], 'owner': repl['owner'], 'logs': repl['fullLogsFullURL'] },
+        'meeting':        { 'title': repl['pageTitle'], 'owner': repl['owner'], 'logs': repl['fullLogs'], 'logsFullURL': repl['fullLogsFullURL'] },
         'attendees':      [ person for person in repl['PeoplePresent'] ],
         'agenda':         [ { 'topic': item['topic'], 'notes': item['items'] } for item in repl['MeetingItems'] ],
         'actions':        [ action for action in repl['ActionItems'] ],
