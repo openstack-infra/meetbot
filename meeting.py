@@ -265,13 +265,8 @@ class MeetingCommands(object):
     # Commands for Chairs:
     def do_startmeeting(self, nick, time_, line, **kwargs):
         """Begin a meeting."""
-        starttime = time.asctime(time_)
         self.starttime = time_
-        timeZone = self.config.timeZone
-        chair = self.owner
-        MeetBotInfoURL = self.config.MeetBotInfoURL
-        repl = locals()
-        repl['__version__'] = __version__
+        repl = self.replacements()
         message = self.config.startMeetingMessage%repl
         for messageline in message.split('\n'):
             self.reply(messageline)
@@ -284,12 +279,7 @@ class MeetingCommands(object):
             self.topic(self.oldtopic)
         self.endtime = time_
         self.config.save()
-        endtime = time.asctime(time_)
-        timeZone = self.config.timeZone
-        urlBasename = self.config.filename(url=True)
-        MeetBotInfoURL = self.config.MeetBotInfoURL
-        repl = locals()
-        repl['__version__'] = __version__
+        repl = self.replacements()
         message = self.config.endMeetingMessage%repl
         for messageline in message.split('\n'):
             self.reply(messageline)
@@ -548,6 +538,20 @@ class Meeting(MeetingCommands, object):
         """Add an item to the meeting minutes list.
         """
         self.minutes.append(m)
+    def replacements(self):
+        repl = { }
+        repl['MeetBotInfoURL'] = self.config.MeetBotInfoURL
+        repl['timeZone'] = self.config.timeZone
+        repl['starttime'] = repl['endtime'] = "None"
+        if getattr(self, "starttime", None) is not None:
+            repl['starttime'] = time.asctime(self.starttime)
+        if getattr(self, "endtime", None) is not None:
+            repl['endtime'] = time.asctime(self.endtime)
+        repl['__version__'] = __version__
+        repl['chair'] = self.owner
+        repl['urlBasename'] = self.config.filename(url=True)
+        return repl
+
 
 
 
