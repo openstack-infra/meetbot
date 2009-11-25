@@ -452,11 +452,11 @@ These variables are set either in ``meetingLocalConfig.py`` (in the
     ``logFileDir`` and ``logUrlPrefix``.
 
     Variables available for replacement using ``%(name)s`` include:
-    ``channel``, ``meetingname``.  Double percent signs (e.g.: ``%%Y``
-    are time formats, from ``time.strftime``.
+    ``channel``, ``network``, ``meetingname``.  Double percent signs
+    (e.g.: ``%%Y`` are time formats, from ``time.strftime``.
 
-    This filename does *not* include extensions.  Those are found from
-    the writers, via the variable ``writer_map``.
+    You should *not* include filename extensions here.  Those are
+    found from the writers, via the variable ``writer_map``.
 
 Putting these all together, a set of variables could be:
   1) ``logFileDir  =  /srv/www/meetings/``

@@ -223,6 +223,28 @@ class MeetBotTest(unittest.TestCase):
         self.assert_('<link rel="stylesheet" ' not in results['.log.html'])
         self.assert_('<style type="text/css" ' not in results['.log.html'])
 
+    def test_filenamevars(self):
+        def getM(fnamepattern):
+            M = meeting.Meeting(channel='somechannel',
+                                network='somenetwork',
+                                owner='nobody',
+                     extraConfig={'filenamePattern':fnamepattern})
+            M.addline('nobody', '#startmeeting')
+            return M
+        # Test the %(channel)s and %(network)s commands in supybot.
+        M = getM('%(channel)s-%(network)s')
+        assert M.config.filename().endswith('somechannel-somenetwork'), \
+               "Filename not as expected: "+M.config.filename()
+        # Test dates in filenames
+        M = getM('%(channel)s-%%F')
+        import time
+        assert M.config.filename().endswith(time.strftime('somechannel-%F')),\
+               "Filename not as expected: "+M.config.filename()
+        # Test #meetingname in filenames
+        M = getM('%(channel)s-%(meetingname)s')
+        M.addline('nobody', '#meetingname blah1234')
+        assert M.config.filename().endswith('somechannel-blah1234'),\
+               "Filename not as expected: "+M.config.filename()
 
 
 if __name__ == '__main__':

@@ -148,11 +148,13 @@ class Config(object):
         else:
             pattern = self.filenamePattern
         channel = self.M.channel.strip('# ').lower().replace('/', '')
+        network = self.M.network.strip(' ').lower().replace('/', '')
         if self.M._meetingname:
             meetingname = self.M._meetingname.replace('/', '')
         else:
             meetingname = channel
-        path = pattern%locals()
+        path = pattern%{'channel':channel, 'network':network,
+                        'meetingname':meetingname}
         path = time.strftime(path, self.M.starttime)
         # If we want the URL name, append URL prefix and return
         if url:
@@ -428,7 +430,7 @@ class Meeting(MeetingCommands, object):
                  filename=None, writeRawLog=False,
                  setTopic=None, sendReply=None, getRegistryValue=None,
                  safeMode=False, channelNicks=None,
-                 extraConfig={}):
+                 extraConfig={}, network='nonetwork'):
         self.config = Config(self, writeRawLog=writeRawLog, safeMode=safeMode,
                             extraConfig=extraConfig)
         if getRegistryValue is not None:
@@ -439,6 +441,7 @@ class Meeting(MeetingCommands, object):
             self._setTopic = setTopic
         self.owner = owner
         self.channel = channel
+        self.network = network
         self.currenttopic = ""
         if oldtopic:
             self.oldtopic = self.config.dec(oldtopic)
@@ -540,6 +543,8 @@ class Meeting(MeetingCommands, object):
         self.minutes.append(m)
     def replacements(self):
         repl = { }
+        repl['channel'] = self.channel
+        repl['network'] = self.network
         repl['MeetBotInfoURL'] = self.config.MeetBotInfoURL
         repl['timeZone'] = self.config.timeZone
         repl['starttime'] = repl['endtime'] = "None"

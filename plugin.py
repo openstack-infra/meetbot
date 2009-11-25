@@ -74,6 +74,7 @@ class MeetBot(callbacks.Plugin):
         nick = msg.nick
         channel = msg.args[0]
         payload = msg.args[1]
+        network = irc.msg.tags['receivedOn']
 
         # The following is for debugging.  It's excellent to get an
         # interactive interperter inside of the live bot.  use
@@ -85,7 +86,7 @@ class MeetBot(callbacks.Plugin):
         # Get our Meeting object, if one exists.  Have to keep track
         # of different servers/channels.
         # (channel, network) tuple is our lookup key.
-        Mkey = (channel,irc.msg.tags['receivedOn']) 
+        Mkey = (channel,network)
         M = meeting_cache.get(Mkey, None)
 
         # Start meeting if we are requested
@@ -106,10 +107,11 @@ class MeetBot(callbacks.Plugin):
                                 setTopic = _setTopic, sendReply = _sendReply,
                                 getRegistryValue = self.registryValue,
                                 safeMode=True, channelNicks=_channelNicks,
+                                network=network,
                                 )
             meeting_cache[Mkey] = M
             recent_meetings.append(
-                (channel, irc.msg.tags['receivedOn'], time.ctime()))
+                (channel, network, time.ctime()))
             if len(recent_meetings) > 10:
                 del recent_meetings[0]
         # If there is no meeting going on, then we quit
