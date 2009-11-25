@@ -355,7 +355,7 @@ Here is a minimal usage example.  You need at *least* this much to
 make it run. Put this in ``meetingLocalConfig.py`` before you first
 start supybot::
 
-    Class Config(object):
+    class Config(object):
         # These two are **required**:
         logFileDir = '/home/richard/meetbot/'
         logUrlPrefix = 'http://rkd.zgib.net/meetbot/'
