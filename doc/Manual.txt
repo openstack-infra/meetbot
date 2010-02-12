@@ -544,6 +544,39 @@ default):
     PmWiki output.  This doesn't upload *to* a PmWiki instance,
     but that could be added later.
 
+``Template``
+    This writer allows a user-defined template to used to output the
+    meeting logs.  This allows complete control of the output by
+    embedding special tags into templates.  This writer depends on the
+    `Genshi templating engine`_.  For information on how the
+    templating engine works, please see its website or the example
+    templates provided.
+
+.. _`Genshi templating engine`: http://genshi.edgewall.org/
+
+    To use the templating engine, you must specify the template file
+    to use.  This is done via a special argument syntax.  Instead of
+    an file extension name, the extension should be specified as
+    ``.EXTENSION_NAME|template=TEMPLATE_FILE``, with the metavariables
+    explaining what the parts do.  For example, in
+    ``meetingLocalConfig.py`` one would do::
+
+        class Config:
+            writer_map = {
+                ...
+                '.tmpl.txt|template=+template.txt' = writers.Template,
+                }
+.
+    When setting a template writer by the suybot registry, one would do::
+
+        /msg YourBot config plugins.MeetBot.writer_map <other writers> Template:.EXTENSION_NAME|template=TEMPLATE_FILE ...
+
+    ``TEMPLATE_FILE`` is an absolute or relative filename.  As a
+    special case, ``+TEMPLATE_NAME`` can be used to specify a path
+    relative to the MeetBot source directory.  This is used to include
+    the default templates: ``+template.html`` or ``+template.txt`` .
+
+
 Obsolete writers are:
 
 ``HTMLlog1``
