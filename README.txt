@@ -35,16 +35,27 @@ INSTALLATION
 ~~~~~~~~~~~~
 
 Requirements: 
-* pygments (debian package python-pygments) (for pretty IRC logs).
-* docutils (debian package python-docutils) (for restructured text to
-            HTML conversion)
+* pygments (optional) (debian package python-pygments) (for pretty IRC
+  logs).  This package is no longer required (after HTMLlog2 became
+  default)
+* docutils (optional) (debian package python-docutils) (for
+  restructured text to HTML conversion).  This is not used in most
+  installations and no longer recommended.
 
 * Install supybot.  You can use supybot-wizard to make a bot 
   configuration.
 
+  * See the file GETTING_STARTED
+    (/usr/share/doc/supybot/GETTING_STARTED.gz on a Debian system).
+    This tells all about supybot installation, and is an important
+    prerequisite to understanding MeetBot configuration.
+
   * Don't use a prefix character.  (disable this:
       supybot.reply.whenAddressedBy.chars: 
-    in the config file - leave it blank afterwards.)
+    in the config file - leave it blank afterwards.)  If you do use a
+      prefix character, it should be different than the "#" MeetBot
+      prefix character.  There are issues here which still need to be
+      worked out.
 
 * Move the MeetBot directory into your plugins directory of Supybot.
 
