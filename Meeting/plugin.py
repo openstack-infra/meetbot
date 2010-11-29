@@ -36,7 +36,7 @@ import supybot.callbacks as callbacks
 import supybot.ircmsgs as ircmsgs
 
 import time
-import meeting
+import ircmeeting.meeting as meeting
 import supybotconfig
 # Because of the way we override names, we need to reload these in order.
 meeting = reload(meeting)
@@ -55,12 +55,12 @@ try:               recent_meetings
 except NameError:  recent_meetings = [ ]
 
 
-class MeetBot(callbacks.Plugin):
-    """Add the help for "@plugin help MeetBot" here
+class Meeting(callbacks.Plugin):
+    """Add the help for "@plugin help Meeting" here
     This should describe *how* to use this plugin."""
 
     def __init__(self, irc):
-        self.__parent = super(MeetBot, self)
+        self.__parent = super(Meeting, self)
         self.__parent.__init__(irc)
                         
     # Instead of using real supybot commands, I just listen to ALL
@@ -294,9 +294,9 @@ class MeetBot(callbacks.Plugin):
         # command (it does check more than I'd like).  Heavy Wizardry.
         instancemethod = type(self.__getattr__)
         wrapped_function = wrap(wrapped_function, [optional('text', '')])
-        return instancemethod(wrapped_function, self, MeetBot)
+        return instancemethod(wrapped_function, self, Meeting)
 
-Class = MeetBot
+Class = Meeting
 
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

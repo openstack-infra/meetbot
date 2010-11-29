@@ -271,22 +271,14 @@ class Template(_BaseWriter):
     def format(self, extension=None, template='+template.html'):
         repl = self.get_template2()
 
-        # If `template` begins in '+', then it in relative to the
-        # MeetBot source directory.
-        if template[0] == '+':
-            template = os.path.join(os.path.dirname(__file__), template[1:])
-        # If we don't test here, it might fail in the try: block
-        # below, then f.close() will fail and mask the original
-        # exception
-        if not os.access(template, os.F_OK):
-            raise IOError('File not found: %s'%template)
-
         # Do we want to use a text template or HTML ?
         import genshi.template
         if template[-4:] in ('.txt', '.rst'):
             Template = genshi.template.NewTextTemplate   # plain text
         else:
             Template = genshi.template.MarkupTemplate    # HTML-like
+
+        template = self.M.config.findFile(template)
 
         # Do the actual templating work
         try:
@@ -313,10 +305,10 @@ class _CSSmanager(object):
             return ''
         elif cssfile in ('', 'default'):
             # default CSS file
-            css_fname = os.path.join(os.path.dirname(__file__),
-                                     'css-'+name+'-default.css')
+            css_fname = '+css-'+name+'-default.css'
         else:
             css_fname = cssfile
+        css_fname = self.M.config.findFile(css_fname)
         try:
             # Stylesheet specified
             if getattr(self.M.config, 'cssEmbed_'+name, True):

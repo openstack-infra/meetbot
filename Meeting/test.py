@@ -33,13 +33,12 @@ from supybot.test import *
 import os
 import sys
 
-class MeetBotTestCase(ChannelPluginTestCase):
+class MeetingTestCase(ChannelPluginTestCase):
     channel = "#testchannel"
-    plugins = ('MeetBot',)
+    plugins = ('Meeting',)
 
     def testRunMeeting(self):
-        test_script = file(os.path.join(os.path.dirname(__file__),
-                                        "tests/test-script-2.log.txt"))
+        test_script = file(os.path.join("test-script-2.log.txt"))
         for line in test_script:
             # Normalize input lines somewhat.
             line = line.strip()

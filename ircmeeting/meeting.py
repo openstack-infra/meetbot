@@ -235,6 +235,22 @@ class Config(object):
         f.flush()
         newmode = os.stat(f.name).st_mode & (~self.RestrictPerm)
         os.chmod(f.name, newmode)
+    def findFile(self, fname):
+        """Find template files by searching paths.
+
+        Expand '+' prefix to the base data directory.
+        """
+        # If `template` begins in '+', then it in relative to the
+        # MeetBot source directory.
+        if fname[0] == '+':
+            basedir = os.path.dirname(__file__)
+            fname = os.path.join(basedir, fname[1:])
+        # If we don't test here, it might fail in the try: block
+        # below, then f.close() will fail and mask the original
+        # exception
+        if not os.access(fname, os.F_OK):
+            raise IOError('File not found: %s'%fname)
+        return fname
 
 
 

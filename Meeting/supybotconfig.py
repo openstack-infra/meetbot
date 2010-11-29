@@ -35,11 +35,11 @@ import types
 import supybot.conf as conf
 import supybot.registry as registry
 
-import meeting
-import writers
+import ircmeeting.meeting as meeting
+import ircmeeting.writers as writers
 
 # The plugin group for configuration
-MeetBotConfigGroup = conf.registerPlugin('MeetBot')
+MeetBotConfigGroup = conf.registerPlugin('Meeting')
 
 class WriterMap(registry.String):
     """List of output formats to write.  This is a space-separated

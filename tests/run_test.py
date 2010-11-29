@@ -7,8 +7,8 @@ import tempfile
 import unittest
 
 os.environ['MEETBOT_RUNNING_TESTS'] = '1'
-import meeting
-import writers
+import ircmeeting.meeting as meeting
+import ircmeeting.writers as writers
 
 running_tests = True
 
@@ -25,8 +25,9 @@ class MeetBotTest(unittest.TestCase):
         """
         sys.argv[1:] = ["replay", "test-script-1.log.txt"]
         sys.path.insert(0, "..")
+        sys.path.insert(0, "../ircmeeting")
         try:
-            execfile("../meeting.py", {})
+            execfile("../ircmeeting/meeting.py", {})
         finally:
             del sys.path[0]
 
@@ -37,14 +38,14 @@ class MeetBotTest(unittest.TestCase):
         doesn't have a useful status code, so I need to parse the
         output.
         """
-        os.symlink("..", "MeetBot")
+        os.symlink("../Meeting", "Meeting")
         try:
-            output = os.popen("supybot-test ./MeetBot 2>&1").read()
+            output = os.popen("supybot-test ./Meeting 2>&1").read()
             print output
             assert 'FAILED' not in output, "supybot-based tests failed."
             assert '\nOK\n'     in output, "supybot-based tests failed."
         finally:
-            os.unlink("MeetBot")
+            os.unlink("Meeting")
 
     trivial_contents = """
     10:10:10 <x> #startmeeting
