@@ -259,18 +259,31 @@ os.environ['TZ'] = Config.timeZone
 time.tzset()
 
 # load custom local configurations
-try:
-    import __main__
-    if getattr(__main__, 'running_tests', False): raise ImportError
-    if 'MEETBOT_RUNNING_TESTS' in os.environ: raise ImportError
-
-    import meetingLocalConfig
-    meetingLocalConfig = reload(meetingLocalConfig)
-    if hasattr(meetingLocalConfig, 'Config'):
-        Config = type('Config', (meetingLocalConfig.Config, Config), {})
-except ImportError:
-    pass
-
+LocalConfig = None
+import __main__
+# Two conditions where we do NOT load any local configuration files
+if getattr(__main__, 'running_tests', False): pass
+elif 'MEETBOT_RUNNING_TESTS' in os.environ:   pass
+else:
+    # First source of config: try just plain importing it
+    try:
+        import meetingLocalConfig
+        meetingLocalConfig = reload(meetingLocalConfig)
+        if hasattr(meetingLocalConfig, 'Config'):
+            LocalConfig = meetingLocalConfig.Config
+    except ImportError:
+        pass
+    if LocalConfig is None:
+        for dirname in (os.path.dirname("__file__"), "."):
+            fname = os.path.join(dirname, "meetingLocalConfig.py")
+            if os.access(fname, os.F_OK):
+                meetingLocalConfig = { }
+                execfile(fname, meetingLocalConfig)
+                LocalConfig = meetingLocalConfig["Config"]
+                break
+    if LocalConfig is not None:
+        # Subclass Config and LocalConfig, new type overrides Config.
+        Config = type('Config', (LocalConfig, Config), {})
 
 
 class MeetingCommands(object):
