@@ -51,7 +51,7 @@ class WriterMap(registry.String):
         writer_map = { }
         for writer in s:
             #from fitz import interact ; interact.interact()
-            writer, ext = writer.split(':')
+            writer, ext = writer.split(':', 1)
             if not hasattr(writers, writer):
                 raise ValueError("Writer name not found: %s"%writer)
             #if len(ext) < 2 or ext[0] != '.':

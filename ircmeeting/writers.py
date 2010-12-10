@@ -82,7 +82,7 @@ class _BaseWriter(object):
     def __init__(self, M, **kwargs):
         self.M = M
 
-    def format(self, extension=None):
+    def format(self, extension=None, **kwargs):
         """Override this method to implement the formatting.
 
         For file output writers, the method should return a unicode
@@ -91,6 +91,13 @@ class _BaseWriter(object):
         The argument 'extension' is the key from `writer_map`.  For
         file writers, this can (and should) be ignored.  For non-file
         outputs, this can be used to This can be used to pass data,
+
+        **kwargs is a dictionary of keyword arguments which are found
+        via parsing the extension to the writer.  If an extension is
+        this:
+          .txt|arg1=val1|arg2=val2
+        then kwargs will be passed as {'arg1':'val1', 'arg2':'val2'}.
+        This can be used for extra configuration for writers.
         """
         raise NotImplementedError
 
