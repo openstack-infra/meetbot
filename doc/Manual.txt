@@ -509,6 +509,18 @@ And to set it (again, in private message with the bot)::
 
     <MrBeige> config plugins.MeetBot.writer_map HTML2:.html MediaWiki:.mw HTMLlog2:.log.html Text:.txt
 
+There is a special way to pass arguments to writers.  Learn by
+example::
+
+    writer_map = {
+        '.mw|mwsite=http://site.net|mwpath=Meetings':writers.MediaWiki,
+    }
+
+or via supybot::
+
+    config plugins.MeetBot.writer_map MediaWiki:.mw|mwsite=http://site.net|mwpath=Meetings
+
+
 
 
 
@@ -541,8 +553,21 @@ default):
     A meeting notes format, as a plain text file
 
 ``MediaWiki``
-    MediaWiki output.  This doesn't upload *to* a MediaWiki instance,
-    but that could be added later.
+    MediaWiki output.
+
+    The MediaWiki writer has the
+    ability to upload to a MediaWiki site directly.  You use the
+    custom variables ``mwsite``: site name to upload to, ``mwpath``:
+    subpage to upload to (final location is
+    ``%(mwpath)/%(file_basename)), ``mwusername`` and ``mwpassword``:
+    username and password to log in as.
+
+    An upload is attempted if ``mwsite`` is given.  A login is
+    attempted if ``mwusername`` is given.  An example configuration::
+
+        writer_map = {
+            '.mw|mwsite=http://site.net|mwpath=Meetings':writers.MediaWiki,
+            }
 
 ``PmWiki``
     PmWiki output.  This doesn't upload *to* a PmWiki instance,
@@ -570,7 +595,7 @@ default):
                 ...
                 '.tmpl.txt|template=+template.txt' = writers.Template,
                 }
-.
+
     When setting a template writer by the suybot registry, one would do::
 
         /msg YourBot config plugins.MeetBot.writer_map <other writers> Template:.EXTENSION_NAME|template=TEMPLATE_FILE ...

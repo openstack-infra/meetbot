@@ -1132,7 +1132,7 @@ class MediaWiki(_BaseWriter):
             sWRAPsMeeting started by %(owner)s at %(starttime)s
             %(timeZone)s.  The full logs are available at
             %(fullLogsFullURL)s .eWRAPe""")
-    def format(self, extension=None):
+    def format(self, extension=None, **kwargs):
         """Return a MediaWiki formatted minutes summary."""
         M = self.M
 
@@ -1156,6 +1156,26 @@ class MediaWiki(_BaseWriter):
         body = [ b for b in body if b is not None ]
         body = "\n\n\n\n".join(body)
         body = replaceWRAP(body)
+
+
+        # Do we want to upload?
+        if 'mwpath' in kwargs:
+            import mwclient
+            mwsite = kwargs['mwsite']
+            mwpath = kwargs['mwpath']
+            mwusername = kwargs.get('mwusername', None)
+            mwpassword = kwargs.get('mwpassword', '')
+            subpagename = os.path.basename(self.M.config.filename())
+            mwfullname = "%s/%s" % (mwpath, subpagename)
+            force_login = (mwusername != None)
+
+            site = mwclient.Site(mwsite, force_login=force_login)
+            if(login):
+                site.login(mwusername, mwpassword)
+            page = site.Pages[mwfullname]
+            some = page.edit()
+            page.save(body, summary="Meeting")
+
 
         return body
 
