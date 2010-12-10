@@ -584,6 +584,7 @@ class Meeting(MeetingCommands, object):
         repl['__version__'] = __version__
         repl['chair'] = self.owner
         repl['urlBasename'] = self.config.filename(url=True)
+        repl['basename'] = os.path.basename(self.config.filename())
         return repl
 
 
