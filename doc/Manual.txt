@@ -491,7 +491,10 @@ along with extensions to use.  For example, in
             '.mw':writers.MediaWiki,
             }
 
-If an extension is ``.none`` the output will *not* be written to a file.
+If an extension begins in ``.none`` the output will *not* be written
+to a file.  Note that you can't have the same extension multiple times
+due to the way python dictionaries work: use ``.none1``, ``.none2``,
+etc.
 
 This *can* be configured through supybot.  To do this, set
 ``supybot.plugins.MeetBot.writer_map`` to a space-separated list of

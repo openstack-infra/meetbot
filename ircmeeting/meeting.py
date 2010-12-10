@@ -218,7 +218,7 @@ class Config(object):
                 if getattr(self, "dontSave", False):
                     pass
                 # ".none" or a single "." disable writing.
-                elif extension.lower() in (".none", "."):
+                elif extension.lower()[:5] in (".none", "."):
                     pass
                 else:
                     self.writeToFile(text, filename)
