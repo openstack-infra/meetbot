@@ -491,6 +491,7 @@ along with extensions to use.  For example, in
             '.mw':writers.MediaWiki,
             }
 
+If an extension is ``.none`` the output will *not* be written to a file.
 
 This *can* be configured through supybot.  To do this, set
 ``supybot.plugins.MeetBot.writer_map`` to a space-separated list of
