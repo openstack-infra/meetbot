@@ -33,9 +33,9 @@ from supybot.test import *
 import os
 import sys
 
-class MeetingTestCase(ChannelPluginTestCase):
+class MeetBotTestCase(ChannelPluginTestCase):
     channel = "#testchannel"
-    plugins = ('Meeting',)
+    plugins = ('MeetBot',)
 
     def testRunMeeting(self):
         test_script = file(os.path.join("test-script-2.log.txt"))
