@@ -460,8 +460,6 @@ class Meeting(MeetingCommands, object):
                  setTopic=None, sendReply=None, getRegistryValue=None,
                  safeMode=False, channelNicks=None,
                  extraConfig={}, network='nonetwork'):
-        self.config = Config(self, writeRawLog=writeRawLog, safeMode=safeMode,
-                            extraConfig=extraConfig)
         if getRegistryValue is not None:
             self._registryValue = getRegistryValue
         if sendReply is not None:
@@ -472,6 +470,8 @@ class Meeting(MeetingCommands, object):
         self.channel = channel
         self.network = network
         self.currenttopic = ""
+        self.config = Config(self, writeRawLog=writeRawLog, safeMode=safeMode,
+                            extraConfig=extraConfig)
         if oldtopic:
             self.oldtopic = self.config.dec(oldtopic)
         else:

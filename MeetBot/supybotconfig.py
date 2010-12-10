@@ -77,15 +77,20 @@ class SupybotConfigProxy(object):
     def __init__(self, *args, **kwargs):
         """Do the regular default configuration, and sta"""
         OriginalConfig = self.__OriginalConfig
-        self.__C = OriginalConfig(*args, **kwargs)
+        self.__C = OriginalConfig.__new__(OriginalConfig, *args, **kwargs)
+        # We need to call the __init__ *after* we have rebound the
+        # method to get variables from the config proxy.
+        old_init = self.__C.__init__
+        new_init = types.MethodType(old_init.im_func, self, old_init.im_class)
+        new_init(*args, **kwargs)
     
     def __getattr__(self, attrname):
         """Try to get the value from the supybot registry.  If it's in
         the registry, return it.  If it's not, then proxy it to th.
         """
         if attrname in settable_attributes:
-            value = self.__C.M._registryValue(attrname,
-                                              channel=self.__C.M.channel)
+            M = self.M
+            value = M._registryValue(attrname, channel=M.channel)
             if not isinstance(value, (str, unicode)):
                 return value
             # '.' is used to mean "this is not set, use the default
@@ -93,6 +98,19 @@ class SupybotConfigProxy(object):
             if value != '.':
                 value = value.replace('\\n', '\n')
                 return value
+        # If the attribute is a _property_, we need to rebind the
+        # "fget" method to the proxy class.
+        # See http://docs.python.org/library/functions.html#property
+        #     http://docs.python.org/reference/datamodel.html#descriptors
+        C = self.__C
+        # is this a class attribute AND does it have a fget ?
+        if hasattr(C.__class__, attrname) and \
+               hasattr(getattr(C.__class__, attrname), 'fget'):
+            # Get the 'fget' descriptor, rebind it to self, return its
+            # value.
+            fget = getattr(C.__class__, attrname).fget
+            fget = types.MethodType(fget, self, C.__class__)
+            return fget()
         # We don't have this value in the registry.  So, proxy it to
         # the normal config object.  This is also the path that all
         # functions take.
