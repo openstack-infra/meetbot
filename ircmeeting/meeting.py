@@ -448,7 +448,7 @@ class MeetingCommands(object):
             self.addnick(nick, lines=0)
     def do_link(self, **kwargs):
         """Add informational item to the minutes."""
-        m = items.Link(**kwargs)
+        m = items.Link(M=self, **kwargs)
         self.additem(m)
     def do_commands(self, **kwargs):
         commands = [ "#"+x[3:] for x in dir(self) if x[:3]=="do_" ]

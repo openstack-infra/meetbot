@@ -222,6 +222,32 @@ class MeetBotTest(unittest.TestCase):
                          results, re.IGNORECASE), \
                          "Nick full-word matching failed"
 
+    def test_urlMatching(self):
+        """Test properly detection of URLs in lines
+        """
+        script = """
+        20:13:50 <x> #startmeeting
+        20:13:50 <x> #link prefix http://site1.com suffix
+        20:13:50 <x> http://site2.com suffix
+        20:13:50 <x> ftp://ftpsite1.com suffix
+        20:13:50 <x> #link prefix ftp://ftpsite2.com suffix
+        20:13:50 <x> irc://ircsite1.com suffix
+        20:13:50 <x> mailto://a@mail.com suffix
+        20:13:50 <x> #endmeeting
+        """
+        M = process_meeting(script)
+        results = M.save()['.html']
+        assert re.search(r'prefix.*href.*http://site1.com.*suffix',
+                         results), "URL missing 1"
+        assert re.search(r'href.*http://site2.com.*suffix',
+                         results), "URL missing 2"
+        assert re.search(r'href.*ftp://ftpsite1.com.*suffix',
+                         results), "URL missing 3"
+        assert re.search(r'prefix.*href.*ftp://ftpsite2.com.*suffix',
+                         results), "URL missing 4"
+        assert re.search(r'href.*mailto://a@mail.com.*suffix',
+                         results), "URL missing 5"
+
     def t_css(self):
         """Runs all CSS-related tests.
         """

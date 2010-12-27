@@ -169,21 +169,19 @@ adjust and have MeetBot re-process the logs later.
                release.
 
 #link
-  Add a link to the minutes.  The URL must be the first thing on the
-  line, separated by a space from the rest of the line, and it will be
-  properly hyperlinked.  This command is automatically detected if the line
-  starts with http:, https:, mailto:, and some other common protocols
-  defined in the ``UrlProtocols`` configuration variable.  Examples::
+
+  Add a link to the minutes.  The URL will be properly detected within
+  the line in most cases - the URL can't contain spaces.  This command
+  is automatically detected if the line starts with http:, https:,
+  mailto:, and some other common protocols defined in the
+  ``UrlProtocols`` configuration variable.  Examples::
 
     < MrBeige> #link http://wiki.debian.org/MeetBot/ is the main page
     < MrBeige> http://wiki.debian.org/MeetBot/ is the main page
-
-  Both of these two examples are equivalent, and will hyperlink
-  properly.  The first example below won't hyperlink properly, the
-  second one won't be automatically detected::
-
     < MrBeige> #link the main page is http://wiki.debian.org/MeetBot/
-    < MrBeige> the main page is http://wiki.debian.org/MeetBot/
+               so go there
+    < MrBeige> the main page is http://wiki.debian.org/MeetBot/ so go
+               there.  (This will NOT be detected automatically)
 
 
 

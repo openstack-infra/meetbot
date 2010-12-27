@@ -30,6 +30,7 @@
 ###
 
 import os
+import re
 import time
 
 import writers
@@ -73,10 +74,9 @@ class _BaseItem(object):
             replacements[name] = getattr(self, name)
         replacements['nick'] = escapewith(replacements['nick'])
         replacements['link'] = self.logURL(M)
-        if 'line' in replacements:
-            replacements['line'] = escapewith(replacements['line'])
-        if 'topic' in replacements:
-            replacements['topic'] = escapewith(replacements['topic'])
+        for key in ('line', 'prefix', 'suffix', 'topic'):
+            if key in replacements:
+                replacements[key] = escapewith(replacements[key])
         if 'url' in replacements:
             replacements['url_quoteescaped'] = \
                                       escapewith(self.url.replace('"', "%22"))
@@ -228,24 +228,40 @@ class Rejected(GenericItem):
 class Link(_BaseItem):
     itemtype = 'LINK'
     html_template = """<tr><td><a href='%(link)s#%(anchor)s'>%(time)s</a></td>
-        <td>%(itemtype)s</td><td>%(nick)s</td><td>%(starthtml)s<a href="%(url)s">%(url_readable)s</a> %(line)s%(endhtml)s</td>
+        <td>%(itemtype)s</td><td>%(nick)s</td><td>%(starthtml)s%(prefix)s<a href="%(url)s">%(url_readable)s</a>%(suffix)s%(endhtml)s</td>
         </tr>"""
-    #html2_template = ("""<i>%(itemtype)s</i>: %(starthtml)s<a href="%(url)s">%(url_readable)s</a> %(line)s%(endhtml)s """
-    #                  """(%(nick)s, <a href='%(link)s#%(anchor)s'>%(time)s</a>)""")
-    #html2_template = ("""<i>%(itemtype)s</i>: %(starthtml)s<a href="%(url)s">%(url_readable)s</a> %(line)s%(endhtml)s """
-    #                  """(<a href='%(link)s#%(anchor)s'>%(nick)s</a>, %(time)s)""")
-    html2_template = ("""%(starthtml)s<a href="%(url)s">%(url_readable)s</a> %(line)s%(endhtml)s """
+    html2_template = ("""%(starthtml)s%(prefix)s<a href="%(url)s">%(url_readable)s</a>%(suffix)s%(endhtml)s """
                       """<span class="details">"""
                       """(<a href='%(link)s#%(anchor)s'>%(nick)s</a>, """
                       """%(time)s)"""
                       """</span>""")
-    rst_template = """*%(itemtype)s*: %(startrst)s%(url)s %(line)s%(endrst)s  (%(rstref)s_)"""
-    text_template = """%(itemtype)s: %(starttext)s%(url)s %(line)s%(endtext)s  (%(nick)s, %(time)s)"""
-    mw_template = """''%(itemtype)s:'' %(startmw)s%(url)s %(line)s%(endmw)s  (%(nick)s, %(time)s)"""
-    def __init__(self, nick, line, linenum, time_):
+    rst_template = """*%(itemtype)s*: %(startrst)s%(prefix)s%(url)s%(suffix)s%(endrst)s  (%(rstref)s_)"""
+    text_template = """%(itemtype)s: %(starttext)s%(prefix)s%(url)s%(suffix)s%(endtext)s  (%(nick)s, %(time)s)"""
+    mw_template = """''%(itemtype)s:'' %(startmw)s%(prefix)s%(url)s%(suffix)s%(endmw)s  (%(nick)s, %(time)s)"""
+    def __init__(self, nick, line, linenum, time_, M):
         self.nick = nick ; self.linenum = linenum
         self.time = time.strftime("%H:%M:%S", time_)
-        self.url, self.line = (line+' ').split(' ', 1)
+        self.line = line
+
+        protocols = M.config.UrlProtocols
+        protocols = '|'.join(re.escape(p) for p in protocols)
+        protocols = '(?:'+protocols+')'
+        # This is gross.
+        # (.*?)          - any prefix, non-greedy
+        # (%s//[^\s]+    - protocol://... until the next space
+        # (?<!\.|\))     - but the last character can NOT be . or )
+        # (.*)           - any suffix
+        url_re = re.compile(r'(.*?)(%s//[^\s]+(?<!\.|\)))(.*)'%protocols)
+        m = url_re.match(line)
+        if m:
+            self.prefix = m.group(1)
+            self.url    = m.group(2)
+            self.suffix = m.group(3)
+        else:
+            # simple matching, the old way.
+            self.url, self.suffix = (line+' ').split(' ', 1)
+            self.suffix = ' '+self.suffix
+            self.prefix = ''
         # URL-sanitization
         self.url_readable = self.url # readable line version
         self.url = self.url

@@ -64,7 +64,15 @@
 # links
 20:13:50 <MrBeige> #topic Links
 20:13:50 <Utahraptor> #link http://test<b>.zgib.net
+20:13:50 <Utahraptor> #link ftp://test<b>.zgib.net "
+20:13:50 <Utahraptor> #link mailto://a@bla"h.com
 20:13:50 <Utahraptor> #link http://test.zgib.net/&testpage
+20:13:50 <Utahraptor> #link prefix http://test.zgib.net/&testpage suffix
+20:13:50 <Utahraptor> #link prefix ftp://test.zg"ib.net/&testpage suffix
+20:13:50 <Utahraptor> #link prefix mailto://a@blah.com&testpage suffix
+20:13:50 <Utahraptor> #link prefix http://google.com/. suffix
+20:13:50 <Utahraptor> #link prefix (http://google.com/) suffix
+
 
 # accents
 20:13:50 <MrBeige> #topic Character sets
