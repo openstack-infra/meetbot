@@ -221,6 +221,7 @@ class Config(object):
                 elif extension.lower()[:5] in (".none", "."):
                     pass
                 else:
+                    filename = rawname + extension
                     self.writeToFile(text, filename)
         if hasattr(self, 'save_hook'):
             self.save_hook(realtime_update=realtime_update)
