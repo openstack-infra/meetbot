@@ -81,6 +81,23 @@ class MeetBotTest(unittest.TestCase):
     #   process_meeting(contents=file('test-script-3.log.txt').read(),
     #                   extraConfig={'writer_map':self.full_writer_map})
 
+    def test_actionNickMatching(self):
+        script = """
+        20:13:50 <x> #startmeeting
+        20:13:50 <somenick>
+        20:13:50 <someone> #action say somenickLONG
+        20:13:50 <someone> #action say the somenicklong
+        20:13:50 <somenick> I should not have an item assisgned to me.
+        20:13:50 <somenicklong> I should have some things assigned to me.
+        20:13:50 <x> #endmeeting
+        """
+        M = process_meeting(script)
+        results = M.save()['.html']
+        print results
+        assert not re.search(r'\bsomenick\b(?! \()',
+                         results, re.IGNORECASE), \
+                         "Nick full-word matching failed"
+
     all_commands_test_contents = """
     10:10:10 <x> #startmeeting
     10:10:10 <x> #topic h6k4orkac

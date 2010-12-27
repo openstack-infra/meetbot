@@ -69,6 +69,8 @@ def replaceWRAP(item):
         return TextWrapper(width=72, break_long_words=False).fill(m.group(1))
     return re_wrap.sub(repl, item)
 
+def makeNickRE(nick):
+    return re.compile('\\b'+re.escape(nick)+'\\b', re.IGNORECASE)
 
 def MeetBotVersion():
     import meeting
@@ -125,14 +127,15 @@ class _BaseWriter(object):
 
     def iterActionItemsNick(self):
         for nick in sorted(self.M.attendees.keys(), key=lambda x: x.lower()):
-            def nickitems():
+            nick_re = makeNickRE(nick)
+            def nickitems(nick_re):
                 for m in self.M.minutes:
                     # The hack below is needed because of pickling problems
                     if m.itemtype != "ACTION": continue
-                    if m.line.find(nick) == -1: continue
+                    if nick_re.search(m.line) is None: continue
                     m.assigned = True
                     yield m
-            yield nick, nickitems()
+            yield nick, nickitems(nick_re=nick_re)
     def iterActionItemsUnassigned(self):
         for m in self.M.minutes:
             if m.itemtype != "ACTION": continue
@@ -848,11 +851,12 @@ class ReST(_BaseWriter):
         # Action Items, by person (This could be made lots more efficient)
         ActionItemsPerson = [ ]
         for nick in sorted(M.attendees.keys(), key=lambda x: x.lower()):
+            nick_re = makeNickRE(nick)
             headerPrinted = False
             for m in M.minutes:
                 # The hack below is needed because of pickling problems
                 if m.itemtype != "ACTION": continue
-                if m.line.find(nick) == -1: continue
+                if nick_re.search(m.line) is None: continue
                 if not headerPrinted:
                     ActionItemsPerson.append("* %s"%rst(nick))
                     headerPrinted = True
@@ -953,11 +957,12 @@ class Text(_BaseWriter):
         ActionItemsPerson.append(self.heading('Action items, by person'))
         numberAssigned = 0
         for nick in sorted(M.attendees.keys(), key=lambda x: x.lower()):
+            nick_re = makeNickRE(nick)
             headerPrinted = False
             for m in M.minutes:
                 # The hack below is needed because of pickling problems
                 if m.itemtype != "ACTION": continue
-                if m.line.find(nick) == -1: continue
+                if nick_re.search(m.line) is None: continue
                 if not headerPrinted:
                     ActionItemsPerson.append("* %s"%text(nick))
                     headerPrinted = True
@@ -1080,11 +1085,12 @@ class MediaWiki(_BaseWriter):
         ActionItemsPerson.append(self.heading('Action items, by person'))
         numberAssigned = 0
         for nick in sorted(M.attendees.keys(), key=lambda x: x.lower()):
+            nick_re = makeNickRE(nick)
             headerPrinted = False
             for m in M.minutes:
                 # The hack below is needed because of pickling problems
                 if m.itemtype != "ACTION": continue
-                if m.line.find(nick) == -1: continue
+                if nick_re.search(m.line) is None: continue
                 if not headerPrinted:
                     ActionItemsPerson.append("* %s"%mw(nick))
                     headerPrinted = True
