@@ -1,7 +1,9 @@
 # Richard Darst, 2009
 
+import glob
 import os
 import re
+import shutil
 import sys
 import tempfile
 import unittest
@@ -12,24 +14,34 @@ import ircmeeting.writers as writers
 
 running_tests = True
 
-def process_meeting(contents, extraConfig={}):
+def process_meeting(contents, extraConfig={}, dontSave=True,
+                    filename='/dev/null'):
+    """Take a test script, return Meeting object of that meeting.
+
+    To access the results (a dict keyed by extensions), use M.save(),
+    with M being the return of this function.
+    """
     return meeting.process_meeting(contents=contents,
-                                channel="#none",  filename='/dev/null',
-                                dontSave=True, safeMode=False,
+                                channel="#none",  filename=filename,
+                                dontSave=dontSave, safeMode=False,
                                 extraConfig=extraConfig)
 
 class MeetBotTest(unittest.TestCase):
 
     def test_replay(self):
-        """Replay of a meeting, using __meeting__.
+        """Replay of a meeting, using 'meeting.py replay'.
         """
+        old_argv = sys.argv[:]
         sys.argv[1:] = ["replay", "test-script-1.log.txt"]
-        sys.path.insert(0, "..")
         sys.path.insert(0, "../ircmeeting")
         try:
-            execfile("../ircmeeting/meeting.py", {})
+            gbls = {"__name__":"__main__",
+                    "__file__":"../ircmeeting/meeting.py"}
+            execfile("../ircmeeting/meeting.py", gbls)
+            assert "M" in gbls, "M object not in globals: did it run?"
         finally:
             del sys.path[0]
+            sys.argv[:] = old_argv
 
     def test_supybottests(self):
         """Test by sending input to supybot, check responses.
@@ -38,14 +50,17 @@ class MeetBotTest(unittest.TestCase):
         doesn't have a useful status code, so I need to parse the
         output.
         """
-        os.symlink("../Meeting", "Meeting")
+        os.symlink("../MeetBot", "MeetBot")
+        os.symlink("../ircmeeting", "ircmeeting")
+        sys.path.insert(0, ".")
         try:
-            output = os.popen("supybot-test ./Meeting 2>&1").read()
-            print output
+            output = os.popen("supybot-test ./MeetBot 2>&1").read()
             assert 'FAILED' not in output, "supybot-based tests failed."
             assert '\nOK\n'     in output, "supybot-based tests failed."
         finally:
-            os.unlink("Meeting")
+            os.unlink("MeetBot")
+            os.unlink("ircmeeting")
+            del sys.path[0]
 
     trivial_contents = """
     10:10:10 <x> #startmeeting
@@ -69,34 +84,39 @@ class MeetBotTest(unittest.TestCase):
         }
 
     def M_trivial(self, contents=None, extraConfig={}):
+        """Convenience wrapper to process_meeting.
+        """
         if contents is None:
             contents = self.trivial_contents
         return process_meeting(contents=contents,
                                extraConfig=extraConfig)
 
     def test_script_1(self):
-        process_meeting(contents=file('test-script-1.log.txt').read(),
-                        extraConfig={'writer_map':self.full_writer_map})
+        """Run test-script-1.log.txt through the processor.
+
+        - Check all writers
+        - Check actual file writing.
+        """
+        tmpdir = tempfile.mkdtemp(prefix='test-meetbot')
+        try:
+            process_meeting(contents=file('test-script-1.log.txt').read(),
+                            filename=os.path.join(tmpdir, 'meeting'),
+                            dontSave=False,
+                            extraConfig={'writer_map':self.full_writer_map,
+                                         })
+            # Test every extension in the full_writer_map to make sure
+            # it was written.
+            for extension in self.full_writer_map:
+                ext = re.search(r'^\.(.*?)($|\|)', extension).group(1)
+                files = glob.glob(os.path.join(tmpdir, 'meeting.'+ext))
+                assert len(files) > 0, \
+                       "Extension did not produce output: '%s'"%extension
+        finally:
+            shutil.rmtree(tmpdir)
+
     #def test_script_3(self):
     #   process_meeting(contents=file('test-script-3.log.txt').read(),
     #                   extraConfig={'writer_map':self.full_writer_map})
-
-    def test_actionNickMatching(self):
-        script = """
-        20:13:50 <x> #startmeeting
-        20:13:50 <somenick>
-        20:13:50 <someone> #action say somenickLONG
-        20:13:50 <someone> #action say the somenicklong
-        20:13:50 <somenick> I should not have an item assisgned to me.
-        20:13:50 <somenicklong> I should have some things assigned to me.
-        20:13:50 <x> #endmeeting
-        """
-        M = process_meeting(script)
-        results = M.save()['.html']
-        print results
-        assert not re.search(r'\bsomenick\b(?! \()',
-                         results, re.IGNORECASE), \
-                         "Nick full-word matching failed"
 
     all_commands_test_contents = """
     10:10:10 <x> #startmeeting
@@ -174,6 +194,33 @@ class MeetBotTest(unittest.TestCase):
     #        m2 = re.search(t2, re.sub(r'[^\w\n]', '', results['.txt']))
     #        import fitz.interactnow
     #        print m.groups()
+
+    def test_actionNickMatching(self):
+        """Test properly detect nicknames in lines
+
+        This checks the 'Action items, per person' list to make sure
+        that the nick matching is limited to full words.  For example,
+        the nick 'jon' will no longer be assigned lines containing
+        'jonathan'.
+        """
+        script = """
+        20:13:50 <x> #startmeeting
+        20:13:50 <somenick>
+        20:13:50 <someone> #action say somenickLONG
+        20:13:50 <someone> #action say the somenicklong
+        20:13:50 <somenick> I should not have an item assisgned to me.
+        20:13:50 <somenicklong> I should have some things assigned to me.
+        20:13:50 <x> #endmeeting
+        """
+        M = process_meeting(script)
+        results = M.save()['.html']
+        # This regular expression is:
+        # \bsomenick\b   - the nick in a single word
+        # (?! \()        - without " (" following it... to not match
+        #                  the "People present" section.
+        assert not re.search(r'\bsomenick\b(?! \()',
+                         results, re.IGNORECASE), \
+                         "Nick full-word matching failed"
 
     def t_css(self):
         """Runs all CSS-related tests.
