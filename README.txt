@@ -44,19 +44,19 @@ Install Supybot
 Install the MeetBot plugin
 --------------------------
 
-* Move the Meeting directory into your ``plugins`` directory of
+* Move the MeetBot directory into your ``plugins`` directory of
   Supybot.
 
 * You need the ``ircmeeting`` directory to be importable as a python
   module.
 
-  * Easy method:  Copy ``ircmeeting`` into the ``Meeting`` directory.
+  * Easy method:  Copy ``ircmeeting`` into the ``MeetBot`` directory.
     This makes ``ircmeeting`` work as a relative import.  However,
     this will probably stop working with some future Python version.
 
   * Other method: Copy ``ircmeeting`` somewhere into $PYTHONPATH.
 
-* Make sure the plugin is loaded.  Use the command ``load Meeting``.
+* Make sure the plugin is loaded.  Use the command ``load MeetBot``.
   You can check the command ``config plugins`` to check what is
   loaded.
 
