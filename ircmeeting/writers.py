@@ -1176,7 +1176,7 @@ class MediaWiki(_BaseWriter):
             force_login = (mwusername != None)
 
             site = mwclient.Site(mwsite, force_login=force_login)
-            if(login):
+            if(force_login):
                 site.login(mwusername, mwpassword)
             page = site.Pages[mwfullname]
             some = page.edit()
