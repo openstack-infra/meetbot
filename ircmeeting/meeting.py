@@ -358,7 +358,7 @@ class MeetingCommands(object):
         if not self.isChair(nick): return
         m = items.Rejected(nick, **kwargs)
         self.additem(m)
-    do_rejected = do_rejected
+    do_reject = do_rejected
     def do_chair(self, nick, line, **kwargs):
         """Add a chair to the meeting."""
         if not self.isChair(nick): return
