@@ -33,6 +33,7 @@ import time
 import os
 import re
 import stat
+import textwrap
 
 import writers
 import items
@@ -66,6 +67,12 @@ class Config(object):
     # regular expression for parsing commands.  First group is the cmd name,
     # second group is the rest of the line.
     command_RE = re.compile(r'#([\w]+)[ \t]*(.*)')
+    # Regular expression for parsing the startvote command.
+    startvote_RE = re.compile(r'(?P<question>.*)\?\s*(?P<choices>.*)')
+    # Regular expression for parsing the startvote options.
+    choicesSplit_RE = re.compile(r'\W+')
+    # default voting options if none are given by the user
+    defaultVoteOptions = ['Yes', 'No']
     # The channels which won't have date/time appended to the filename.
     specialChannels = ("#meetbot-test", "#meetbot-test2")
     specialChannelFilenamePattern = '%(channel)s/%(channel)s'
@@ -85,7 +92,7 @@ class Config(object):
               "The chair is %(chair)s. Information about MeetBot at "
               "%(MeetBotInfoURL)s.\n"
               "Useful Commands: #action #agreed #help #info #idea #link "
-              "#topic.")
+              "#topic #startvote.")
     endMeetingMessage = ("Meeting ended %(endtime)s %(timeZone)s.  "
                          "Information about MeetBot at %(MeetBotInfoURL)s . "
                          "(v %(__version__)s)\n"
@@ -450,6 +457,63 @@ class MeetingCommands(object):
         """Add informational item to the minutes."""
         m = items.Link(M=self, **kwargs)
         self.additem(m)
+    def do_startvote(self, nick, line, **kwargs):
+        """Begin voting on a topic.
+
+        Format of command is #startvote $TOPIC $Options.
+        eg #startvote What color should we use? blue, red, green"""
+        if not self.isChair(nick) or self._voteTopic is not None: return
+        voteDetails = self.config.startvote_RE.match(line)
+        if voteDetails is None: return
+        self._voteTopic = voteDetails.group("question")
+        voteOptions = voteDetails.group("choices")
+        if voteOptions == "":
+            self._voteOptions = self.config.defaultVoteOptions
+        else:
+            self._voteOptions = self.config.choicesSplit_RE.split(voteOptions)
+        self.reply("Begin voting on: %s? Valid vote options are %s." % \
+            (self._voteTopic, ", ".join(self._voteOptions)))
+        self.reply("Vote using '#vote OPTION'. Only your last vote counts.")
+    def do_endvote(self, nick, line, **kwargs):
+        """End voting on topic."""
+        if not self.isChair(nick) or self._voteTopic is None: return
+        m = 'Voted on "%s?" Results are' % self._voteTopic
+        self.reply(m)
+        self.do_showvote(**kwargs)
+        for k,s in self._votes.iteritems():
+            m += ", %s: %s" % (k, len(s))
+        m = items.Vote(nick=nick, line=m, **kwargs)
+        self.additem(m)
+        self._voteTopic = None
+        self._voteOptions = None
+        self._votes = { }
+        self._voters = { }
+    def do_vote(self, nick, line, **kwargs):
+        """Vote for specific voting topic option."""
+        if self._voteTopic is None: return
+        if line in self._voteOptions:
+            oldvote = self._voters.get(nick)
+            if oldvote is not None:
+                self._votes[oldvote].remove(nick)
+            self._voters[nick] = line
+            v = self._votes.get(line, set())
+            v.add(nick)
+            self._votes[line] = v
+        else:
+            m = "%s: %s is not a valid option. Valid options are %s." % \
+                (nick, line, ", ".join(self._voteOptions))
+            self.reply(m)
+    def do_showvote(self, **kwargs):
+        """Show intermediate vote results."""
+        if self._voteTopic is None: return
+        for k, s in self._votes.iteritems():
+            # Attempt to print all the names while obeying the 512 character
+            # limit. Would probably be better to calculate message overhead and
+            # determine wraps()s width argument based on that.
+            ms = textwrap.wrap(", ".join(s), 400)
+            for m2 in ms:
+                m1 = "%s (%s): " % (k, len(s))
+                self.reply(m1 + m2)
     def do_commands(self, **kwargs):
         commands = [ "#"+x[3:] for x in dir(self) if x[:3]=="do_" ]
         commands.sort()
@@ -490,6 +554,9 @@ class Meeting(MeetingCommands, object):
         self._meetingname = ""
         self._meetingIsOver = False
         self._channelNicks = channelNicks
+        self._voteTopic = None
+        self._votes = { }
+        self._voters = { }
         if filename:
             self._filename = filename
 

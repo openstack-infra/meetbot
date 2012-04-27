@@ -290,3 +290,5 @@ class Link(_BaseItem):
     def mw(self, M):
         repl = self.get_replacements(M, escapewith=writers.mw)
         return self.mw_template%repl
+class Vote(GenericItem):
+    itemtype = 'VOTE'
