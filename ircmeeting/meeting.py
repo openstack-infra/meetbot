@@ -70,7 +70,7 @@ class Config(object):
     # Regular expression for parsing the startvote command.
     startvote_RE = re.compile(r'(?P<question>.*)\?\s*(?P<choices>.*)')
     # Regular expression for parsing the startvote options.
-    choicesSplit_RE = re.compile(r'\W+')
+    choicesSplit_RE = re.compile(r'[^\w+-]+')
     # default voting options if none are given by the user
     defaultVoteOptions = ['Yes', 'No']
     # The channels which won't have date/time appended to the filename.
