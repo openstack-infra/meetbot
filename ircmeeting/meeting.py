@@ -481,7 +481,9 @@ class MeetingCommands(object):
         self.reply(m)
         self.do_showvote(**kwargs)
         for k,s in self._votes.iteritems():
-            m += ", %s: %s" % (k, len(s))
+            vote = self._voteOptions[map(unicode.lower,
+                                        self._voteOptions).index(k)]
+            m += ", %s: %s" % (vote, len(s))
         m = items.Vote(nick=nick, line=m, **kwargs)
         self.additem(m)
         self._voteTopic = None
@@ -491,14 +493,15 @@ class MeetingCommands(object):
     def do_vote(self, nick, line, **kwargs):
         """Vote for specific voting topic option."""
         if self._voteTopic is None: return
-        if line in self._voteOptions:
+        vote = line.lower()
+        if vote in map(unicode.lower, self._voteOptions):
             oldvote = self._voters.get(nick)
             if oldvote is not None:
                 self._votes[oldvote].remove(nick)
-            self._voters[nick] = line
-            v = self._votes.get(line, set())
+            self._voters[nick] = vote
+            v = self._votes.get(vote, set())
             v.add(nick)
-            self._votes[line] = v
+            self._votes[vote] = v
         else:
             m = "%s: %s is not a valid option. Valid options are %s." % \
                 (nick, line, ", ".join(self._voteOptions))
@@ -511,8 +514,10 @@ class MeetingCommands(object):
             # limit. Would probably be better to calculate message overhead and
             # determine wraps()s width argument based on that.
             ms = textwrap.wrap(", ".join(s), 400)
+            vote = self._voteOptions[map(unicode.lower,
+                                        self._voteOptions).index(k)]
             for m2 in ms:
-                m1 = "%s (%s): " % (k, len(s))
+                m1 = "%s (%s): " % (vote, len(s))
                 self.reply(m1 + m2)
     def do_commands(self, **kwargs):
         commands = [ "#"+x[3:] for x in dir(self) if x[:3]=="do_" ]
