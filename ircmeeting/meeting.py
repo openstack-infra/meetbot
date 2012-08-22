@@ -416,8 +416,8 @@ class MeetingCommands(object):
         """Set the variable (meetingname) which can be used in save.
 
         If this isn't set, it defaults to the channel name."""
-        meetingname = line.strip().lower().replace(" ", "")
         meetingname = "_".join(line.strip().lower().split())
+        meetingname = re.sub(r'[^a-z0-9]', '_', meetingname)
         self._meetingname = meetingname
         self.reply("The meeting name has been set to '%s'"%meetingname)
     # Commands for Anyone:
