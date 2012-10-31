@@ -462,9 +462,16 @@ class MeetingCommands(object):
 
         Format of command is #startvote $TOPIC $Options.
         eg #startvote What color should we use? blue, red, green"""
-        if not self.isChair(nick) or self._voteTopic is not None: return
         voteDetails = self.config.startvote_RE.match(line)
-        if voteDetails is None: return
+        if not self.isChair(nick):
+            self.reply("Only the meeting chair may start a vote.")
+            return
+        elif self._voteTopic is not None:
+            self.reply("Already voting on '%s'" % self._voteTopic)
+            return
+        elif voteDetails is None:
+            self.reply("Unable to parse vote topic and options.")
+            return
         self._voteTopic = voteDetails.group("question")
         voteOptions = voteDetails.group("choices")
         if voteOptions == "":
