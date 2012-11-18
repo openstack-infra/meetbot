@@ -314,6 +314,7 @@ class MeetingCommands(object):
         for messageline in message.split('\n'):
             self.reply(messageline)
         if line.strip():
+            self.do_meetingtopic(nick=nick, line=line, time_=time_, **kwargs)
             self.do_meetingname(nick=nick, line=line, time_=time_, **kwargs)
     def do_endmeeting(self, nick, time_, **kwargs):
         """End the meeting."""
