@@ -1,4 +1,4 @@
-20:13:46 <MrBeige> #startmeeting
+20:13:46 <MrBeige> #startmeeting Test Meeting
 
 20:13:50 <T-Rex> #info this command is just before the first topic
 
