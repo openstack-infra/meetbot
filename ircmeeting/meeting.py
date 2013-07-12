@@ -88,11 +88,12 @@ class Config(object):
     # you have to use doubled percent signs.  Also, it gets split by
     # '\n' and each part between newlines get said in a separate IRC
     # message.
-    startMeetingMessage = ("Meeting started %(starttime)s %(timeZone)s.  "
-              "The chair is %(chair)s. Information about MeetBot at "
-              "%(MeetBotInfoURL)s.\n"
-              "Useful Commands: #action #agreed #help #info #idea #link "
-              "#topic #startvote.")
+    startMeetingMessage = ("Meeting started %(starttime)s %(timeZone)s "
+                           "and is due to finish in %(length)d minutes.  "
+                           "The chair is %(chair)s. Information about MeetBot at "
+                           "%(MeetBotInfoURL)s.\n"
+                           "Useful Commands: #action #agreed #help #info #idea #link "
+                           "#topic #startvote.")
     endMeetingMessage = ("Meeting ended %(endtime)s %(timeZone)s.  "
                          "Information about MeetBot at %(MeetBotInfoURL)s . "
                          "(v %(__version__)s)\n"
@@ -309,6 +310,7 @@ class MeetingCommands(object):
     def do_startmeeting(self, nick, time_, line, **kwargs):
         """Begin a meeting."""
         self.starttime = time_
+        self.expectedend = time.mktime(time_) + self.length * 60
         repl = self.replacements()
         message = self.config.startMeetingMessage%repl
         for messageline in message.split('\n'):
@@ -318,7 +320,8 @@ class MeetingCommands(object):
             self.do_meetingname(nick=nick, line=line, time_=time_, **kwargs)
     def do_endmeeting(self, nick, time_, **kwargs):
         """End the meeting."""
-        if not self.isChair(nick): return
+        # Chairs can end the meeting early - anyone can end it after the meeting length
+        if (not self.isChair(nick)) and (self.expectedend > time.mktime(time_)): return
         if self.oldtopic:
             self.topic(self.oldtopic)
         self.endtime = time_
@@ -541,7 +544,7 @@ class Meeting(MeetingCommands, object):
                  filename=None, writeRawLog=False,
                  setTopic=None, sendReply=None, getRegistryValue=None,
                  safeMode=False, channelNicks=None,
-                 extraConfig={}, network='nonetwork'):
+                 extraConfig={}, network='nonetwork', length=60):
         if getRegistryValue is not None:
             self._registryValue = getRegistryValue
         if sendReply is not None:
@@ -551,6 +554,7 @@ class Meeting(MeetingCommands, object):
         self.owner = owner
         self.channel = channel
         self.network = network
+        self.length = length
         self.currenttopic = ""
         self.config = Config(self, writeRawLog=writeRawLog, safeMode=safeMode,
                             extraConfig=extraConfig)
@@ -603,7 +607,7 @@ class Meeting(MeetingCommands, object):
         return (nick == self.owner  or  nick in self.chairs)
     def save(self, **kwargs):
         return self.config.save(**kwargs)
-    # Primary enttry point for new lines in the log:
+    # Primary entry point for new lines in the log:
     def addline(self, nick, line, time_=None):
         """This is the way to add lines to the Meeting object.
         """
@@ -666,6 +670,7 @@ class Meeting(MeetingCommands, object):
             repl['starttime'] = time.asctime(self.starttime)
         if getattr(self, "endtime", None) is not None:
             repl['endtime'] = time.asctime(self.endtime)
+        repl['length'] = self.length
         repl['__version__'] = __version__
         repl['chair'] = self.owner
         repl['urlBasename'] = self.config.filename(url=True)
@@ -677,9 +682,11 @@ class Meeting(MeetingCommands, object):
 
 
 def parse_time(time_):
-    try: return time.strptime(time_, "%H:%M:%S")
+    # Need a date > 1970 to convert to a timestamp for comparisons.
+    # Without a year here, Python assumes 1900.
+    try: return time.strptime("01/01/2000 "+time_, "%m/%d/%Y %H:%M:%S")
     except ValueError: pass
-    try: return time.strptime(time_, "%H:%M")
+    try: return time.strptime("01/01/2000 "+time_, "%m/%d/%Y %H:%M")
     except ValueError: pass
 logline_re = re.compile(r'\[?([0-9: ]*)\]? *<[@+]?([^>]+)> *(.*)')
 loglineAction_re = re.compile(r'\[?([0-9: ]*)\]? *\* *([^ ]+) *(.*)')
@@ -688,12 +695,17 @@ loglineAction_re = re.compile(r'\[?([0-9: ]*)\]? *\* *([^ ]+) *(.*)')
 def process_meeting(contents, channel, filename,
                     extraConfig = {},
                     dontSave=False,
-                    safeMode=True):
-    M = Meeting(channel=channel, owner=None,
-                filename=filename, writeRawLog=False, safeMode=safeMode,
-                extraConfig=extraConfig)
-    if dontSave:
-        M.config.dontSave = True
+                    safeMode=True,
+                    existingMeeting=None):
+    # Allow tests part way through the meeting
+    if existingMeeting:
+        M = existingMeeting
+    else:
+        M = Meeting(channel=channel, owner=None,
+                    filename=filename, writeRawLog=False, safeMode=safeMode,
+                    extraConfig=extraConfig)
+        if dontSave:
+            M.config.dontSave = True
     # process all lines
     for line in contents.split('\n'):
         # match regular spoken lines:

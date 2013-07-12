@@ -92,11 +92,13 @@ class MeetBot(callbacks.Plugin):
         # Start meeting if we are requested
         if payload[:13] == '#startmeeting':
             if M is not None:
-                irc.error("Can't start another meeting, one is in progress.")
+                irc.error("Can't start another meeting, one is in progress."
+                          "  Use #endmeeting first.")
                 return
             name = payload[13:].strip()
             if not name:
-                irc.error("A meeting name is required, e.g., '#startmeeting Marketing Committee'")
+                irc.error("A meeting name is required, e.g., "
+                          "'#startmeeting Marketing Committee'")
                 return
             # This callback is used to send data to the channel:
             def _setTopic(x):

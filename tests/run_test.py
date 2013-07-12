@@ -15,16 +15,17 @@ import ircmeeting.writers as writers
 running_tests = True
 
 def process_meeting(contents, extraConfig={}, dontSave=True,
-                    filename='/dev/null'):
+                    filename='/dev/null', existingMeeting=None):
     """Take a test script, return Meeting object of that meeting.
 
     To access the results (a dict keyed by extensions), use M.save(),
     with M being the return of this function.
     """
     return meeting.process_meeting(contents=contents,
-                                channel="#none",  filename=filename,
-                                dontSave=dontSave, safeMode=False,
-                                extraConfig=extraConfig)
+                                   channel="#none",  filename=filename,
+                                   dontSave=dontSave, safeMode=False,
+                                   extraConfig=extraConfig,
+                                   existingMeeting=existingMeeting)
 
 class MeetBotTest(unittest.TestCase):
 
@@ -247,6 +248,20 @@ class MeetBotTest(unittest.TestCase):
                          results), "URL missing 4"
         assert re.search(r'href.*mailto://a@mail.com.*suffix',
                          results), "URL missing 5"
+
+    def test_lateEnd(self):
+        """Test that anyone can end a meeting late
+        """
+        script = """
+        20:13:50 <x> #startmeeting
+        20:43:57 <y> #endmeeting
+        """
+        M = process_meeting(script)
+        assert M._meetingIsOver == False, "Early call from non-chair should fail"
+        process_meeting("22:13:52 <z> #endmeeting", existingMeeting=M)
+        assert M._meetingIsOver, "Late call from non-chair should succeed"
+        results = M.save()['.txt']
+        assert 'Meeting ended at 22:13:52' in results
 
     def t_css(self):
         """Runs all CSS-related tests.
