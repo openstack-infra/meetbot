@@ -353,19 +353,19 @@ class MeetingCommands(object):
         self.endtime = time_
         self.config.save()
     def do_agreed(self, nick, **kwargs):
-        """Add aggreement to the minutes - chairs only."""
+        """Add agreement to the minutes - chairs only."""
         if not self.isChair(nick): return
         m = items.Agreed(nick, **kwargs)
         self.additem(m)
     do_agree = do_agreed
     def do_accepted(self, nick, **kwargs):
-        """Add aggreement to the minutes - chairs only."""
+        """Add agreement to the minutes - chairs only."""
         if not self.isChair(nick): return
         m = items.Accepted(nick, **kwargs)
         self.additem(m)
     do_accept = do_accepted
     def do_rejected(self, nick, **kwargs):
-        """Add aggreement to the minutes - chairs only."""
+        """Add agreement to the minutes - chairs only."""
         if not self.isChair(nick): return
         m = items.Rejected(nick, **kwargs)
         self.additem(m)
