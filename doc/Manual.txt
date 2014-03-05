@@ -31,7 +31,7 @@ contributions is generally a good thing.::
              is MrBeige.
   < MeetBot> Information about MeetBot at
              http://wiki.debian.org/MeetBot , Useful Commands: #action
-             #agreed #halp #info #idea #link #topic.
+             #agreed #help #info #idea #link #topic.
 
 MeetBot gives us a little bit of information about the meeting.::
 
