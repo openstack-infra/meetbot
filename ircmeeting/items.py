@@ -198,6 +198,8 @@ class GenericItem(_BaseItem):
     def mw(self, M):
         repl = self.get_replacements(M, escapewith=writers.mw)
         return self.mw_template%repl
+    def __str__(self):
+        return "#{} {}".format(self.itemtype.lower(), self.line)
 
 
 class Info(GenericItem):
