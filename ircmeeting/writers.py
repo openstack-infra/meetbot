@@ -451,8 +451,8 @@ class HTMLlog2(_BaseWriter, _CSSmanager):
                                (html(m2.group(1)),html(m2.group(2))))
                 if m2 is None:
                     outline = html(line)
-                lines.append('<a name="l-%(lineno)s"></a>'
-                             '<span class="tm">%(time)s</span>'
+                lines.append('<a href="#l-%(lineno)s" name="l-%(lineno)s">'
+                             '<span class="tm">%(time)s</span></a>'
                              '<span class="nk">%(nick)s</span> '
                              '%(line)s'%{'lineno':lineNumber,
                                          'time':html(m.group('time')),
@@ -462,8 +462,8 @@ class HTMLlog2(_BaseWriter, _CSSmanager):
             m = action_re.match(l)
             # is it a action line?
             if m is not None:
-                lines.append('<a name="l-%(lineno)s"></a>'
-                             '<span class="tm">%(time)s</span>'
+                lines.append('<a href="#l-%(lineno)s" name="l-%(lineno)s">'
+                             '<span class="tm">%(time)s</span></a>'
                              '<span class="nka">%(nick)s</span> '
                              '<span class="ac">%(line)s</span>'%
                                {'lineno':lineNumber,
